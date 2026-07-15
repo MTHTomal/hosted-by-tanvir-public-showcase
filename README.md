@@ -349,7 +349,9 @@ The application includes:
 
 ## CSE449 Systems Extension
 
-The project was later used as the foundation for experiments in distributed systems, parallel programming, GPU computing, and performance measurement.
+The project was later used as the foundation for experiments in Distributed, Parallel and High Performance Computing systems course AKA CSE449 where I comapared CPU vs GPU computing, and performance measurement. Here are some useful results, I hope whoever came here can take a look,
+
+**CSE449 Docs:** [HBT Presentation and papers](https://drive.google.com/drive/folders/1mLshzJVSA0JX8p-SbCCrfs90th2ESrYJ?usp=sharing)
 
 ### Stable Systems Components in This Repository
 
