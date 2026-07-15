@@ -1,0 +1,11 @@
+{
+  "name": "hosted-by-tanvir",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./static/src/styles.css -o ./static/css/styles.css --minify",
+    "watch:css": "tailwindcss -i ./static/src/styles.css -o ./static/css/styles.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}

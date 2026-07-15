@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block title %}{% if form.instance.pk %}Edit Announcement{% else %}Create Announcement{% endif %}{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:staff_dashboard' %}">Staff</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="{% url 'tournament:staff_announcement_list' %}">Announcements</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">
+            {% if form.instance.pk %}Edit{% else %}Create{% endif %}
+        </span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    <div class="mb-5">
+        <h1 class="page-title text-2xl">
+            {% if form.instance.pk %}Edit Announcement{% else %}Create Announcement{% endif %}
+        </h1>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-6">
+        {# ─── FORM ─────────────────────────────────────────────────── #}
+        <div class="lg:col-span-2">
+            <div class="card overflow-hidden">
+                <form method="post" novalidate class="p-5 space-y-5">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert-error">
+                        {% for e in form.non_field_errors %}
+                        <p>{{ e }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.title.id_for_label }}">
+                            Title <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="title"
+                            id="{{ form.title.id_for_label }}"
+                            value="{{ form.title.value|default:'' }}"
+                            placeholder="e.g. Server maintenance scheduled"
+                            class="form-input"
+                            maxlength="160"
+                        />
+                        {% for e in form.title.errors %}
+                        <p class="form-error">{{ e }}</p>
+                        {% endfor %}
+                        <p class="form-help text-xs">
+                            {{ form.title.value|default:""|length }}/160 characters
+                        </p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.body.id_for_label }}">
+                            Message <span class="text-red-500">*</span>
+                        </label>
+                        <textarea
+                            name="body"
+                            id="{{ form.body.id_for_label }}"
+                            placeholder="Enter your announcement message..."
+                            class="form-input"
+                            rows="8"
+                        >{{ form.body.value|default:'' }}</textarea>
+                        {% for e in form.body.errors %}
+                        <p class="form-error">{{ e }}</p>
+                        {% endfor %}
+                        <p class="form-help text-xs">
+                            Supports plain text formatting. Line breaks are preserved.
+                        </p>
+                    </div>
+
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.tournament.id_for_label }}">
+                                Tournament (Optional)
+                            </label>
+                            {{ form.tournament }}
+                            {% for e in form.tournament.errors %}
+                            <p class="form-error">{{ e }}</p>
+                            {% endfor %}
+                            <p class="form-help text-xs">
+                                Link this announcement to a specific tournament.
+                            </p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.sort_order.id_for_label }}">
+                                Sort Order
+                            </label>
+                            <input
+                                type="number"
+                                name="sort_order"
+                                id="{{ form.sort_order.id_for_label }}"
+                                value="{{ form.sort_order.value|default:0 }}"
+                                min="0"
+                                class="form-input"
+                            />
+                            {% for e in form.sort_order.errors %}
+                            <p class="form-error">{{ e }}</p>
+                            {% endfor %}
+                            <p class="form-help text-xs">
+                                Lower numbers appear first. Use 0-100.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-gray-100 space-y-3">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                name="is_active"
+                                id="{{ form.is_active.id_for_label }}"
+                                {% if form.is_active.value %}checked{% endif %}
+                                class="form-checkbox"
+                            />
+                            <span class="text-sm font-medium text-forest">
+                                Publish
+                                <span class="text-gray-500 font-normal text-xs block mt-0.5">
+                                    Announcement is visible on the public page
+                                </span>
+                            </span>
+                        </label>
+
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                name="is_pinned"
+                                id="{{ form.is_pinned.id_for_label }}"
+                                {% if form.is_pinned.value %}checked{% endif %}
+                                class="form-checkbox"
+                            />
+                            <span class="text-sm font-medium text-forest">
+                                Pin to top
+                                <span class="text-gray-500 font-normal text-xs block mt-0.5">
+                                    Pinned announcements appear first
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="pt-4 border-t border-gray-100 flex items-center gap-3">
+                        <button
+                            type="submit"
+                            class="btn-brand"
+                        >
+                            {% if form.instance.pk %}Save changes{% else %}Create announcement{% endif %}
+                        </button>
+                        <a
+                            href="{% url 'tournament:staff_announcement_list' %}"
+                            class="btn-outline"
+                        >
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# ─── INFO PANEL ───────────────────────────────────────────── #}
+        <div class="lg:col-span-1">
+            <div class="card sticky top-20">
+                <div class="px-5 py-4 border-b border-gray-100">
+                    <h3 class="font-semibold text-sm text-forest">Preview</h3>
+                </div>
+                <div class="p-5 space-y-3">
+                    <div>
+                        <p class="text-xs text-gray-400 font-mono mb-1">Title</p>
+                        <p class="text-sm font-semibold text-forest line-clamp-2">
+                            {{ form.title.value|default:"Your title here" }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs text-gray-400 font-mono mb-1">Status</p>
+                        {% if form.is_active.value %}
+                        <span class="badge-active text-[10px]">Active</span>
+                        {% else %}
+                        <span class="badge-inactive text-[10px]">Draft</span>
+                        {% endif %}
+                    </div>
+
+                    {% if form.is_pinned.value %}
+                    <div>
+                        <p class="text-xs text-gray-400 font-mono mb-1">Visibility</p>
+                        <span class="badge-staff text-[10px]">Pinned</span>
+                    </div>
+                    {% endif %}
+
+                    {% if form.tournament.value %}
+                    <div>
+                        <p class="text-xs text-gray-400 font-mono mb-1">Tournament</p>
+                        <p class="text-xs text-forest font-medium">
+                            Linked to tournament
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

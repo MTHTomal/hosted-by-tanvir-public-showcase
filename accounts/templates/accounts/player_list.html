@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Players{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:home' %}">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">Players</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <p class="section-label mb-1">Player Directory</p>
+            <h1 class="page-title">Players</h1>
+            <p class="page-subtitle">
+                Active profiles across the Hosted by Tanvir community.
+            </p>
+        </div>
+        <div class="card px-4 py-3 text-sm text-gray-500">
+            <span class="font-semibold text-forest">{{ players|length }}</span>
+            active player{{ players|length|pluralize }}
+        </div>
+    </div>
+
+    {% if players %}
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {% for player in players %}
+        <a
+            href="{% url 'accounts:profile' player.username %}"
+            class="card p-5 hover:shadow-card-hover transition-shadow group"
+        >
+            <div class="flex items-start gap-4">
+                {% if player.avatar %}
+                <img
+                    src="{{ player.avatar.url }}"
+                    alt="{{ player.display_name }}"
+                    class="w-14 h-14 rounded-2xl object-cover border border-green-100 shrink-0"
+                />
+                {% else %}
+                <div
+                    class="w-14 h-14 rounded-2xl bg-brand flex items-center justify-center text-white font-bold text-lg shrink-0 group-hover:bg-brand-dark transition-colors"
+                >
+                    {{ player.display_name|first|upper }}
+                </div>
+                {% endif %}
+
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p
+                                class="font-semibold text-forest text-base group-hover:text-brand transition-colors truncate"
+                            >
+                                {{ player.display_name }}
+                            </p>
+                            <p class="text-sm text-gray-400 truncate">
+                                @{{ player.username }}
+                            </p>
+                        </div>
+                        {% if player.available_for_recruitment %}
+                        <span class="badge-open shrink-0">Available</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <p class="text-[11px] font-mono uppercase tracking-[0.22em] text-gray-400">
+                                Player ID
+                            </p>
+                            <p class="mt-1 text-forest truncate">
+                                {{ player.unique_id|default:"Pending" }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-[11px] font-mono uppercase tracking-[0.22em] text-gray-400">
+                                Joined
+                            </p>
+                            <p class="mt-1 text-forest">
+                                {{ player.created_at|date:"M Y" }}
+                            </p>
+                        </div>
+                    </div>
+
+                    {% if player.bio %}
+                    <p class="mt-4 text-sm text-gray-500 leading-6">
+                        {{ player.bio|truncatechars:110 }}
+                    </p>
+                    {% elif player.in_game_name %}
+                    <p class="mt-4 text-sm text-gray-500 leading-6">
+                        In-game name: {{ player.in_game_name }}
+                    </p>
+                    {% else %}
+                    <p class="mt-4 text-sm text-gray-400 leading-6">
+                        Player profile available for tournament results, stats, and team history.
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <p class="empty-state-title">No players yet</p>
+        <p class="empty-state-body">Players appear here once they register.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

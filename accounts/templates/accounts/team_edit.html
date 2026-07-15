@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Edit Team — {{ team.name }}{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'accounts:team_list' %}">Teams</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="{% url 'accounts:team_detail' team.pk %}">{{ team.name }}</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">Edit</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section max-w-lg">
+    <div class="mb-6">
+        <h1 class="page-title text-2xl">Edit Team</h1>
+        <p class="page-subtitle">Update your team's name or logo.</p>
+    </div>
+
+    <div class="card overflow-hidden">
+        {% if team.logo %}
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+            <img
+                src="{{ team.logo.url }}"
+                alt="{{ team.name }}"
+                class="w-10 h-10 rounded-lg object-cover border border-green-100"
+            />
+            <p class="text-xs text-gray-400">Current logo</p>
+        </div>
+        {% endif %}
+
+        <form
+            method="post"
+            enctype="multipart/form-data"
+            novalidate
+            class="p-5 space-y-4"
+        >
+            {% csrf_token %} {% if form.non_field_errors %}
+            <div class="alert-error">
+                {% for e in form.non_field_errors %}
+                <p>{{ e }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label class="form-label" for="id_name">Team Name</label>
+                <input
+                    id="id_name"
+                    type="text"
+                    name="name"
+                    placeholder="Team name"
+                    value="{{ form.name.value|default:'' }}"
+                />
+                {% for e in form.name.errors %}
+                <p class="form-error">{{ e }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.logo.id_for_label }}">Team Logo</label>
+                {{ form.logo }} {% for e in form.logo.errors %}
+                <p class="form-error">{{ e }}</p>
+                {% endfor %}
+                <p class="form-help">Optional. Accepted: JPG, PNG, WebP.</p>
+            </div>
+
+            <div class="flex flex-col gap-2 pt-2 sm:flex-row">
+                <button type="submit" class="btn-primary">Save changes</button>
+                <a
+                    href="{% url 'accounts:team_detail' team.pk %}"
+                    class="btn-ghost"
+                    >Cancel</a
+                >
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

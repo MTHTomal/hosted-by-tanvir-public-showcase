@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Complaints/Requests Queue{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:staff_dashboard' %}">Staff</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">Complaints/Requests</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    <div class="mb-6">
+        <h1 class="page-title">Complaints/Requests Queue</h1>
+        <p class="page-subtitle">Private player submissions for staff review.</p>
+    </div>
+
+    <div class="tab-nav mb-6">
+        <a href="?status=active" class="{% if current_status == 'active' %}tab-item-active{% else %}tab-item{% endif %}">
+            Active {% if active_count %}<span class="ml-1 text-xs opacity-60">({{ active_count }})</span>{% endif %}
+        </a>
+        <a href="?status=open" class="{% if current_status == 'open' %}tab-item-active{% else %}tab-item{% endif %}">
+            Open {% if open_count %}<span class="ml-1 text-xs opacity-60">({{ open_count }})</span>{% endif %}
+        </a>
+        <a href="?status=under_review" class="{% if current_status == 'under_review' %}tab-item-active{% else %}tab-item{% endif %}">
+            Under review {% if under_review_count %}<span class="ml-1 text-xs opacity-60">({{ under_review_count }})</span>{% endif %}
+        </a>
+        <a href="?status=resolved" class="{% if current_status == 'resolved' %}tab-item-active{% else %}tab-item{% endif %}">
+            Resolved {% if resolved_count %}<span class="ml-1 text-xs opacity-60">({{ resolved_count }})</span>{% endif %}
+        </a>
+        <a href="?status=rejected" class="{% if current_status == 'rejected' %}tab-item-active{% else %}tab-item{% endif %}">
+            Rejected {% if rejected_count %}<span class="ml-1 text-xs opacity-60">({{ rejected_count }})</span>{% endif %}
+        </a>
+        <a href="?status=all" class="{% if current_status == 'all' %}tab-item-active{% else %}tab-item{% endif %}">All</a>
+    </div>
+
+    {% if complaints %}
+    <p class="stats-table-hint">Swipe to view all complaint columns</p>
+    <div class="card overflow-hidden table-shell stats-table-shell">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th class="w-44">Player</th>
+                    <th class="w-44">Type</th>
+                    <th class="text-center w-32">Status</th>
+                    <th class="w-52">Linked item</th>
+                    <th class="w-32">Created</th>
+                    <th class="text-right w-24"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for complaint in complaints %}
+                <tr>
+                    <td>
+                        <p class="font-semibold text-forest text-sm">{{ complaint.subject }}</p>
+                        <p class="text-xs text-gray-400 mt-0.5 line-clamp-1">{{ complaint.description|truncatewords:12 }}</p>
+                    </td>
+                    <td>{{ complaint.player.display_name }}</td>
+                    <td>{{ complaint.get_complaint_type_display }}</td>
+                    <td class="text-center">
+                        <span class="{% if complaint.status == 'resolved' %}badge-approved{% elif complaint.status == 'rejected' %}badge-rejected{% elif complaint.status == 'under_review' %}badge-progress{% else %}badge-pending{% endif %} text-[10px]">
+                            {{ complaint.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if complaint.result %}
+                        <a href="{% url 'tournament:fixture_detail' complaint.result.fixture.pk %}" class="text-xs text-brand hover:text-brand-dark font-medium transition-colors">
+                            Result: {{ complaint.result.home_score }}-{{ complaint.result.away_score }}
+                        </a>
+                        {% elif complaint.fixture %}
+                        <a href="{% url 'tournament:fixture_detail' complaint.fixture.pk %}" class="text-xs text-brand hover:text-brand-dark font-medium transition-colors">
+                            {{ complaint.fixture.home_team.name }} vs {{ complaint.fixture.away_team.name }}
+                        </a>
+                        {% else %}
+                        <span class="text-xs text-gray-400">None</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-xs text-gray-400">{{ complaint.created_at|date:"M j, Y" }}</td>
+                    <td class="text-right">
+                        <a href="{% url 'tournament:staff_complaint_detail' complaint.pk %}" class="btn-outline btn-sm">Open</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="empty-state py-12">
+            <p class="empty-state-title">No complaints or requests in this view</p>
+            <p class="empty-state-body">New player submissions will appear in the active queue.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

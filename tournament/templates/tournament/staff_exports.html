@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Data Exports{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:home' %}">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="{% url 'tournament:staff_dashboard' %}">Staff Dashboard</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">Data exports</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    <div class="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="page-title">Data exports</h1>
+            <p class="page-subtitle">
+                Staff-only datasets for prediction, local analysis, and course-project work. Google Sheets API integration is deferred.
+            </p>
+        </div>
+        <a href="{% url 'tournament:staff_dashboard' %}" class="btn-outline btn-sm shrink-0">Staff dashboard</a>
+    </div>
+
+    <div class="card-padded mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h2 class="font-semibold text-forest text-sm">{{ package_export.name }}</h2>
+            <p class="text-sm text-gray-500 mt-1">{{ package_export.description }}</p>
+        </div>
+        <div class="shrink-0">
+            <a href="{% url package_export.url_name %}" class="btn-brand btn-sm">Download ZIP</a>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-5">
+        {% for export in exports %}
+        <div class="card-padded flex flex-col gap-4">
+            <div>
+                <h2 class="font-semibold text-forest text-sm">{{ export.name }}</h2>
+                <p class="text-sm text-gray-500 mt-1">{{ export.description }}</p>
+            </div>
+            <div>
+                <a href="{% url export.url_name %}" class="btn-brand btn-sm">Download CSV</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-6 alert-info">
+        <span>Exports intentionally avoid sensitive user/auth fields and use existing approved operational records only.</span>
+    </div>
+</div>
+{% endblock %}

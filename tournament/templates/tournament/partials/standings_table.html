@@ -1,0 +1,152 @@
+{% if has_grouped_standings %} {% for section in grouped_standings_sections %}
+<div
+    class="mb-8 {% if not forloop.last %}border-b border-gray-100 pb-8{% endif %}"
+>
+    <h3 class="section-label mb-3">Group {{ section.label }}</h3>
+    {% if section.standings_rows %}
+    <p class="stats-table-hint">Swipe to view all standings columns</p>
+    <div class="card table-shell stats-table-shell">
+        <table class="data-table min-w-[30rem] sm:min-w-[40rem]" aria-label="Group {{ section.label }} standings">
+            <thead>
+                <tr>
+                    <th class="w-8">#</th>
+                    <th>Team</th>
+                    <th class="text-center w-10">
+                        <span aria-hidden="true">P</span>
+                        <span class="stats-table-sr">Played</span>
+                    </th>
+                    <th class="text-center w-10 hidden sm:table-cell">
+                        <span aria-hidden="true">W</span>
+                        <span class="stats-table-sr">Wins</span>
+                    </th>
+                    <th class="text-center w-10 hidden sm:table-cell">
+                        <span aria-hidden="true">D</span>
+                        <span class="stats-table-sr">Draws</span>
+                    </th>
+                    <th class="text-center w-10 hidden sm:table-cell">
+                        <span aria-hidden="true">L</span>
+                        <span class="stats-table-sr">Losses</span>
+                    </th>
+                    <th class="text-center w-10">
+                        <span aria-hidden="true">GD</span>
+                        <span class="stats-table-sr">Goal difference</span>
+                    </th>
+                    <th class="text-center w-12 font-bold text-forest">
+                        <span aria-hidden="true">Pts</span>
+                        <span class="stats-table-sr">Points</span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in section.standings_rows %}
+                <tr>
+                    <td class="text-gray-300 text-xs tabular-nums">
+                        {{ forloop.counter }}
+                    </td>
+                    <td class="font-semibold text-forest max-w-[10rem] sm:max-w-none truncate">
+                        {{ row.team.name }}
+                    </td>
+                    <td class="text-center tabular-nums text-gray-500">
+                        {{ row.played }}
+                    </td>
+                    <td class="text-center tabular-nums text-gray-500 hidden sm:table-cell">
+                        {{ row.wins }}
+                    </td>
+                    <td class="text-center tabular-nums text-gray-500 hidden sm:table-cell">
+                        {{ row.draws }}
+                    </td>
+                    <td class="text-center tabular-nums text-gray-500 hidden sm:table-cell">
+                        {{ row.losses }}
+                    </td>
+                    <td class="text-center tabular-nums text-gray-500">
+                        {% if row.goal_difference > 0 %}+{% endif %}{{ row.goal_difference }}
+                    </td>
+                    <td class="text-center tabular-nums font-bold text-forest">
+                        {{ row.points }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card p-4 text-center text-sm text-gray-400">
+        No approved results yet in Group {{ section.label }}.
+    </div>
+    {% endif %}
+</div>
+{% endfor %} {% elif standings %}
+<p class="stats-table-hint">Swipe to view all standings columns</p>
+<div class="card table-shell stats-table-shell">
+    <table class="data-table min-w-[30rem] sm:min-w-[40rem]" aria-label="Tournament standings">
+        <thead>
+            <tr>
+                <th class="w-8">#</th>
+                <th>Team</th>
+                <th class="text-center w-10">
+                    <span aria-hidden="true">P</span>
+                    <span class="stats-table-sr">Played</span>
+                </th>
+                <th class="text-center w-10 hidden sm:table-cell">
+                    <span aria-hidden="true">W</span>
+                    <span class="stats-table-sr">Wins</span>
+                </th>
+                <th class="text-center w-10 hidden sm:table-cell">
+                    <span aria-hidden="true">D</span>
+                    <span class="stats-table-sr">Draws</span>
+                </th>
+                <th class="text-center w-10 hidden sm:table-cell">
+                    <span aria-hidden="true">L</span>
+                    <span class="stats-table-sr">Losses</span>
+                </th>
+                <th class="text-center w-10">
+                    <span aria-hidden="true">GD</span>
+                    <span class="stats-table-sr">Goal difference</span>
+                </th>
+                <th class="text-center w-12 font-bold text-forest">
+                    <span aria-hidden="true">Pts</span>
+                    <span class="stats-table-sr">Points</span>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for standing in standings %}
+            <tr>
+                <td class="text-gray-300 text-xs tabular-nums">
+                    {{ forloop.counter }}
+                </td>
+                <td class="font-semibold text-forest max-w-[10rem] sm:max-w-none truncate">
+                    {{ standing.team.name }}
+                </td>
+                <td class="text-center tabular-nums text-gray-500">
+                    {{ standing.played }}
+                </td>
+                <td class="text-center tabular-nums text-gray-500 hidden sm:table-cell">
+                    {{ standing.wins }}
+                </td>
+                <td class="text-center tabular-nums text-gray-500 hidden sm:table-cell">
+                    {{ standing.draws }}
+                </td>
+                <td class="text-center tabular-nums text-gray-500 hidden sm:table-cell">
+                    {{ standing.losses }}
+                </td>
+                <td class="text-center tabular-nums text-gray-500">
+                    {% if standing.goal_difference > 0 %}+{% endif %}{{ standing.goal_difference }}
+                </td>
+                <td class="text-center tabular-nums font-bold text-forest">
+                    {{ standing.points }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% else %}
+<div class="empty-state">
+    <p class="empty-state-title">No standings yet</p>
+    <p class="empty-state-body">
+        Standings update automatically when results are approved.
+    </p>
+</div>
+{% endif %}

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Complaint/Request{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:staff_dashboard' %}">Staff</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="{% url 'tournament:staff_complaint_list' %}">Complaints/Requests</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">{{ complaint.subject|truncatechars:32 }}</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    <div class="flex items-start justify-between gap-4 mb-6">
+        <div>
+            <h1 class="page-title">{{ complaint.subject }}</h1>
+            <p class="page-subtitle">From {{ complaint.player.display_name }} on {{ complaint.created_at|date:"M j, Y H:i" }}</p>
+        </div>
+        <span class="{% if complaint.status == 'resolved' %}badge-approved{% elif complaint.status == 'rejected' %}badge-rejected{% elif complaint.status == 'under_review' %}badge-progress{% else %}badge-pending{% endif %} shrink-0">
+            {{ complaint.get_status_display }}
+        </span>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-5">
+            <div class="card-padded">
+                <h2 class="section-label mb-3">Description</h2>
+                <p class="text-sm text-gray-700 whitespace-pre-line">{{ complaint.description }}</p>
+            </div>
+
+            <div class="card-padded">
+                <h2 class="section-label mb-3">Current Staff Response</h2>
+                {% if complaint.staff_response %}
+                <p class="text-sm text-gray-700 whitespace-pre-line">{{ complaint.staff_response }}</p>
+                <p class="text-xs text-gray-400 mt-3">
+                    {% if complaint.responded_by %}By {{ complaint.responded_by.display_name }}{% endif %}
+                    {% if complaint.responded_at %} on {{ complaint.responded_at|date:"M j, Y H:i" }}{% endif %}
+                </p>
+                {% else %}
+                <p class="empty-state-body text-sm">No response has been sent yet.</p>
+                {% endif %}
+            </div>
+
+            <div class="card-padded">
+                <h2 class="section-label mb-3">Linked Item</h2>
+                {% if complaint.result %}
+                <a href="{% url 'tournament:fixture_detail' complaint.result.fixture.pk %}" class="text-sm text-brand hover:text-brand-dark font-medium transition-colors">
+                    Result {{ complaint.result.home_score }}-{{ complaint.result.away_score }}
+                </a>
+                <p class="text-xs text-gray-400 mt-1">
+                    {{ complaint.result.fixture.home_team.name }} vs {{ complaint.result.fixture.away_team.name }}
+                    &middot; {{ complaint.result.get_status_display }}
+                </p>
+                {% elif complaint.fixture %}
+                <a href="{% url 'tournament:fixture_detail' complaint.fixture.pk %}" class="text-sm text-brand hover:text-brand-dark font-medium transition-colors">
+                    {{ complaint.fixture.home_team.name }} vs {{ complaint.fixture.away_team.name }}
+                </a>
+                <p class="text-xs text-gray-400 mt-1">{{ complaint.fixture.tournament.name }}</p>
+                {% else %}
+                <p class="empty-state-body text-sm">No linked fixture or result.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div>
+            <div class="card sticky top-20 overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-100">
+                    <h2 class="font-semibold text-forest text-sm">Staff Update</h2>
+                </div>
+                <form method="post" novalidate class="p-5 space-y-5">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                    <div class="alert-error">
+                        {% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.status.id_for_label }}">Status</label>
+                        {{ form.status }}
+                        {% for e in form.status.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.staff_response.id_for_label }}">Staff response</label>
+                        {{ form.staff_response }}
+                        {% for e in form.staff_response.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+                    </div>
+
+                    <button type="submit" class="btn-brand w-full">Save response</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

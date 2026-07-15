@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:staff_dashboard' %}">Staff</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="{% url 'tournament:staff_tournament_list' %}">Tournaments</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">{{ page_title }}</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    {# Workspace nav for edit mode #}
+    {% if tournament_obj %}
+    <div
+        class="flex items-center gap-2 mb-6 pb-4 border-b border-gray-100 overflow-x-auto"
+    >
+        <span class="text-xs text-gray-400 font-medium shrink-0"
+            >{{ tournament_obj.name }}:</span
+        >
+        <span
+            class="px-3 py-1.5 text-xs font-medium bg-forest text-white rounded-full shrink-0"
+            >Settings</span
+        >
+        <a
+            href="{% url 'tournament:staff_tournament_registrations' tournament_obj.pk %}"
+            class="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-forest hover:bg-sage rounded-full transition-colors shrink-0"
+        >
+            Entrants & Groups
+        </a>
+        <a
+            href="{% url 'tournament:tournament_detail' tournament_obj.pk %}"
+            class="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-forest hover:bg-sage rounded-full transition-colors shrink-0"
+        >
+            Public page ↗
+        </a>
+        {% if has_fixtures %}
+        <a
+            href="{% url 'tournament:admin_queue' %}"
+            class="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-forest hover:bg-sage rounded-full transition-colors shrink-0"
+        >
+            Result queue {% if pending_result_count > 0 %}
+            <span
+                class="ml-1 bg-red-500 text-white text-[10px] font-bold rounded-full px-1"
+                >{{ pending_result_count }}</span
+            >
+            {% endif %}
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="grid lg:grid-cols-3 gap-6">
+        {# ─── FORM ─────────────────────────────────────────────────── #}
+        <div class="lg:col-span-2">
+            <div class="mb-5">
+                <h1 class="page-title text-2xl">{{ page_title }}</h1>
+            </div>
+
+            {% if archive_lock_reason %}
+            <div class="alert-info mb-5 text-sm">
+                <span>{{ archive_lock_reason }} Existing fixtures, results, standings, and public pages remain visible.</span>
+            </div>
+            {% endif %}
+
+            <div class="card overflow-hidden">
+                <form method="post" novalidate class="p-5 space-y-5">
+                    {% csrf_token %} {% if form.non_field_errors %}
+                    <div class="alert-error">
+                        {% for e in form.non_field_errors %}
+                        <p>{{ e }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label class="form-label" for="id_name">Tournament Name</label>
+                        <input
+                            id="id_name"
+                            type="text"
+                            name="name"
+                            value="{{ form.name.value|default:'' }}"
+                            placeholder="e.g. Premier Cup Season 4"
+                        />
+                        {% for e in form.name.errors %}
+                        <p class="form-error">{{ e }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.tournament_type.id_for_label }}">Type</label>
+                            {{ form.tournament_type }}
+                            {% for e in form.tournament_type.errors %}
+                            <p class="form-error">{{ e }}</p>
+                            {% endfor %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.format.id_for_label }}">Format</label>
+                            {{ form.format }} {% for e in form.format.errors %}
+                            <p class="form-error">{{ e }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {% if form.show_hybrid_qualifier_field %}
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.hybrid_qualifiers_per_group.id_for_label }}">Hybrid Qualifiers Per Group</label>
+                        {{ form.hybrid_qualifiers_per_group }}
+                        {% for e in form.hybrid_qualifiers_per_group.errors %}
+                        <p class="form-error">{{ e }}</p>
+                        {% endfor %}
+                        <p class="form-help">{{ form.hybrid_qualifiers_per_group.help_text }}</p>
+                        {% if form.hybrid_qualifier_locked %}
+                        <p class="form-help text-amber-700">
+                            Locked: {{ form.hybrid_qualifier_lock_reason }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.status.id_for_label }}">Status</label>
+                            {{ form.status }} {% for e in form.status.errors %}
+                            <p class="form-error">{{ e }}</p>
+                            {% endfor %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.max_teams.id_for_label }}">Max Teams</label>
+                            {{ form.max_teams }}
+                            {% for e in form.max_teams.errors %}
+                            <p class="form-error">{{ e }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="grid sm:grid-cols-3 gap-4">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.registration_deadline.id_for_label }}"
+                                >Registration Deadline</label
+                            >
+                            {{ form.registration_deadline }}
+                            {% for e in form.registration_deadline.errors %}
+                            <p class="form-error">{{ e }}</p>
+                            {% endfor %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.start_date.id_for_label }}">Start Date</label>
+                            {{ form.start_date }}
+                            {% for e in form.start_date.errors %}
+                            <p class="form-error">{{ e }}</p>
+                            {% endfor %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.end_date.id_for_label }}">End Date</label>
+                            {{ form.end_date }}
+                            {% for e in form.end_date.errors %}
+                            <p class="form-error">{{ e }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.description.id_for_label }}">Description</label>
+                        {{ form.description }}
+                        {% for e in form.description.errors %}
+                        <p class="form-error">{{ e }}</p>
+                        {% endfor %}
+                        <p class="form-help">{{ form.description.help_text }}</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.tiebreaker_rules.id_for_label }}">Tiebreaker Rules</label>
+                        {{ form.tiebreaker_rules }}
+                        {% for e in form.tiebreaker_rules.errors %}
+                        <p class="form-error">{{ e }}</p>
+                        {% endfor %}
+                        <p class="form-help">{{ form.tiebreaker_rules.help_text }}</p>
+                    </div>
+
+                    <div class="flex flex-col gap-2 pt-2 border-t border-gray-100 sm:flex-row">
+                        {% if not archive_lock_reason %}
+                        <button type="submit" class="btn-primary">
+                            {{ submit_label }}
+                        </button>
+                        {% endif %}
+                        {% if tournament_obj %}
+                        <a
+                            href="{% url 'tournament:tournament_detail' tournament_obj.pk %}"
+                            class="btn-ghost"
+                            >View public page</a
+                        >
+                        {% else %}
+                        <a
+                            href="{% url 'tournament:staff_tournament_list' %}"
+                            class="btn-ghost"
+                            >Cancel</a
+                        >
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# ─── SIDEBAR ──────────────────────────────────────────────── #}
+        <div class="space-y-4">
+            {% if tournament_obj %} {# Tournament status #}
+            <div class="card-padded">
+                <p class="section-label mb-3">Status</p>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Active entries</span>
+                        <span class="font-semibold text-forest tabular-nums"
+                            >{{ active_registration_count }}/{{ tournament_obj.max_teams }}</span
+                        >
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Fixtures</span>
+                        <span class="font-semibold text-forest tabular-nums"
+                            >{{ fixtures_count }}</span
+                        >
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Lock state</span>
+                        <span
+                            class="font-medium {% if entrant_lock_state == 'open' %}text-green-600{% else %}text-amber-600{% endif %}"
+                        >
+                            {{ entrant_lock_state|title }}
+                        </span>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-gray-100 space-y-2">
+                    <a
+                        href="{% url 'tournament:staff_tournament_registrations' tournament_obj.pk %}"
+                        class="btn-outline btn-sm w-full justify-center"
+                        >Manage entrants →</a
+                    >
+                    {% if not archive_lock_reason %}
+                    <form
+                        method="post"
+                        action="{% url 'tournament:staff_tournament_archive' tournament_obj.pk %}"
+                    >
+                        {% csrf_token %}
+                        <button type="submit" class="btn-danger btn-sm w-full justify-center">
+                            Archive tournament
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="alert-info text-xs">
+                        Archived
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Registration preview #}
+            {% if registration_preview %}
+            <div class="card overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-100">
+                    <p
+                        class="text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                    >
+                        Registered Entrants
+                    </p>
+                </div>
+                <ul class="divide-y divide-gray-50">
+                    {% for reg in registration_preview %}
+                    <li
+                        class="px-4 py-2 flex items-center justify-between gap-2"
+                    >
+                        <span class="text-sm text-forest font-medium truncate">
+                            {% if reg.team %}{{ reg.team.name }}{% elif reg.player %}{{ reg.player.display_name }}{% endif %}
+                        </span>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            {% if reg.group_label %}<span
+                                class="text-xs font-mono text-brand"
+                                >Grp {{ reg.group_label }}</span
+                            >{% endif %}
+                            {% if not reg.is_active %}<span
+                                class="badge-draft text-[10px]"
+                                >Inactive</span
+                            >{% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

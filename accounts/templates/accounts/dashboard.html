@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:home' %}">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">Dashboard</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    {# ─── HEADER ──────────────────────────────────────────────────── #}
+    <div
+        class="flex flex-col gap-4 mb-8 sm:flex-row sm:items-start sm:justify-between"
+    >
+        <div>
+            <div class="flex items-center gap-3 mb-1">
+                {% if user.avatar %}
+                <img
+                    src="{{ user.avatar.url }}"
+                    alt="{{ user.display_name }}"
+                    class="w-10 h-10 rounded-full object-cover border border-green-100 shrink-0"
+                />
+                {% else %}
+                <div
+                    class="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white font-bold text-base shrink-0"
+                >
+                    {{ user.display_name|first|upper }}
+                </div>
+                {% endif %}
+                <div>
+                    <h1
+                        class="font-display font-bold text-forest text-xl leading-tight"
+                    >
+                        {{ user.display_name }}
+                    </h1>
+                    <p class="text-xs text-gray-400">
+                        @{{ user.username }} &middot; ID: {{ user.unique_id }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% if is_admin_user %}
+        <a
+            href="{% url 'tournament:staff_dashboard' %}"
+            class="badge-staff shrink-0 text-xs"
+        >
+            Staff area →
+        </a>
+        {% endif %}
+    </div>
+
+    {# ─── CAREER STATS ─────────────────────────────────────────────── #}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+        <div class="stat-tile">
+            <p class="font-display font-bold text-forest text-2xl">
+                {{ career_goals }}
+            </p>
+            <p class="section-label mt-1 text-[10px]">Goals</p>
+        </div>
+        <div class="stat-tile">
+            <p class="font-display font-bold text-forest text-2xl">
+                {{ career_assists }}
+            </p>
+            <p class="section-label mt-1 text-[10px]">Assists</p>
+        </div>
+        <div class="stat-tile">
+            <p class="font-display font-bold text-amber-600 text-2xl">
+                {{ career_yellow_cards }}
+            </p>
+            <p class="section-label mt-1 text-[10px]">Yellow</p>
+        </div>
+        <div class="stat-tile">
+            <p class="font-display font-bold text-red-600 text-2xl">
+                {{ career_red_cards }}
+            </p>
+            <p class="section-label mt-1 text-[10px]">Red</p>
+        </div>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-6">
+        {# ─── LEFT COLUMN ──────────────────────────────────────────────── #}
+        <div class="lg:col-span-2 space-y-5">
+            {# Pending submissions #} {% if pending_submissions %}
+            <div class="card overflow-hidden">
+                <div
+                    class="px-5 py-4 border-b border-gray-100 flex items-center gap-2"
+                >
+                    <span class="dot-pulse"></span>
+                    <h2 class="font-semibold text-forest text-sm">
+                        Action Required
+                    </h2>
+                </div>
+                <ul class="divide-y divide-gray-50">
+                    {% for result in pending_submissions %}
+                    <li
+                        class="flex flex-col items-start gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium text-forest truncate">
+                                {{ result.fixture.home_team.name }} vs {{ result.fixture.away_team.name }}
+                            </p>
+                            <p class="text-xs text-gray-400 mt-0.5">
+                                {{ result.submitted_at|date:"M j, Y" }}
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span
+                                class="{% if result.status == 'rejected' %}badge-rejected {% elif result.status == 'disputed' %}badge-disputed {% else %}badge-pending{% endif %}"
+                            >
+                                {{ result.get_status_display }}
+                            </span>
+                            <a
+                                href="{% url 'tournament:fixture_detail' result.fixture.pk %}"
+                                class="text-xs text-brand hover:text-brand-dark font-medium transition-colors"
+                                >View →</a
+                            >
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %} {# Recent stats #}
+            <div class="card overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-100">
+                    <h2 class="font-semibold text-forest text-sm">
+                        Recent Recorded Stats
+                    </h2>
+                    <p class="text-xs text-gray-400 mt-0.5">
+                        From officially approved results only.
+                    </p>
+                </div>
+                {% if recent_stats %}
+                <p class="stats-table-hint">Swipe to view all stats</p>
+                <div class="table-shell stats-table-shell">
+                    <table
+                        class="data-table"
+                        aria-label="Recent recorded player stats"
+                    >
+                        <thead>
+                            <tr>
+                                <th scope="col">Match</th>
+                                <th scope="col" class="text-center w-10">
+                                    <span aria-hidden="true">⚽</span>
+                                    <span class="stats-table-sr">Goals</span>
+                                </th>
+                                <th scope="col" class="text-center w-10">
+                                    <span aria-hidden="true">🅰️</span>
+                                    <span class="stats-table-sr">Assists</span>
+                                </th>
+                                <th scope="col" class="text-center w-10">
+                                    <span aria-hidden="true">🟨</span>
+                                    <span class="stats-table-sr">Yellow cards</span>
+                                </th>
+                                <th scope="col" class="text-center w-10">
+                                    <span aria-hidden="true">🟥</span>
+                                    <span class="stats-table-sr">Red cards</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in recent_stats %}
+                            <tr>
+                                <td>
+                                    <a
+                                        href="{% url 'tournament:fixture_detail' stat.fixture.pk %}"
+                                        class="hover:text-brand transition-colors"
+                                    >
+                                        <span class="font-medium text-forest text-sm">{{ stat.fixture.home_team.name }} vs {{ stat.fixture.away_team.name }}</span>
+                                    </a>
+                                    <p class="text-xs text-gray-400">
+                                        {{ stat.fixture.tournament.name }}
+                                    </p>
+                                </td>
+                                <td
+                                    class="text-center tabular-nums font-semibold text-forest"
+                                >
+                                    {{ stat.goals }}
+                                </td>
+                                <td
+                                    class="text-center tabular-nums text-gray-500"
+                                >
+                                    {{ stat.assists }}
+                                </td>
+                                <td
+                                    class="text-center tabular-nums text-gray-500"
+                                >
+                                    {{ stat.yellow_cards }}
+                                </td>
+                                <td
+                                    class="text-center tabular-nums text-gray-500"
+                                >
+                                    {{ stat.red_cards }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="px-5 py-8 text-center">
+                    <p class="empty-state-title text-sm">
+                        No recorded stats yet
+                    </p>
+                    <p class="empty-state-body text-xs">
+                        Your official stats appear here after results are
+                        approved.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# ─── RIGHT COLUMN ─────────────────────────────────────────────── #}
+        <div class="space-y-5">
+            {% include "accounts/partials/recent_notifications.html" %}
+
+            {# My team #} {% if membership %}
+            <div class="card-padded">
+                <h2 class="section-label mb-3">My Team</h2>
+                <div class="flex items-center gap-3 mb-3">
+                    <div
+                        class="w-9 h-9 rounded-lg bg-brand-faint flex items-center justify-center shrink-0 text-xs font-bold text-brand"
+                    >
+                        {{ membership.team.name|first|upper }}
+                    </div>
+                    <div class="min-w-0">
+                        <p class="font-semibold text-forest text-sm truncate">
+                            {{ membership.team.name }}
+                        </p>
+                        <p class="text-xs text-gray-400">
+                            {{ membership.get_role_display }}
+                        </p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <a
+                        href="{% url 'accounts:team_detail' membership.team.pk %}"
+                        class="btn-outline btn-sm flex-1 justify-center"
+                        >View team</a
+                    >
+                    {% if membership.role == 'captain' %}
+                    <a
+                        href="{% url 'accounts:team_edit' membership.team.pk %}"
+                        class="btn-ghost btn-sm flex-1 justify-center"
+                        >Edit</a
+                    >
+                    {% endif %}
+                    {% if can_manage_current_team_recruiting %}
+                    <a
+                        href="{% url 'marketplace_team_recruiting' %}"
+                        class="btn-ghost btn-sm flex-1 justify-center"
+                        >Recruiting</a
+                    >
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %} {# Profile edit #}
+            <div class="card overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-100">
+                    <h2 class="font-semibold text-forest text-sm">
+                        Edit Profile
+                    </h2>
+                </div>
+                <form
+                    method="post"
+                    action="{% url 'accounts:update_profile' %}"
+                    enctype="multipart/form-data"
+                    novalidate
+                    class="p-5 space-y-4"
+                >
+                    {% csrf_token %} {% if profile_form.non_field_errors %}
+                    <div class="alert-error text-xs">
+                        {% for e in profile_form.non_field_errors %}
+                        <p>{{ e }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label class="form-label">In-game name</label>
+                        <input
+                            type="text"
+                            name="in_game_name"
+                            placeholder="Your PSN / Xbox / EA tag"
+                            value="{{ profile_form.in_game_name.value|default:'' }}"
+                        />
+                        {% for e in profile_form.in_game_name.errors %}
+                        <p class="form-error">{{ e }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Player ID</label>
+                        <input
+                            type="text"
+                            name="unique_id"
+                            value="{{ profile_form.unique_id.value|default:'' }}"
+                        />
+                        {% for e in profile_form.unique_id.errors %}
+                        <p class="form-error">{{ e }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Bio</label>
+                        <textarea
+                            name="bio"
+                            rows="3"
+                            placeholder="A short bio (optional)"
+                        >{{ profile_form.bio.value|default:'' }}</textarea>
+                        {% for e in profile_form.bio.errors %}
+                        <p class="form-error">{{ e }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Avatar</label>
+                        {{ profile_form.avatar }}
+                        {% for e in profile_form.avatar.errors %}
+                        <p class="form-error">{{ e }}</p>
+                        {% endfor %}
+                        {% if user.avatar %}
+                        <div class="flex items-center gap-3 mt-2">
+                            <img
+                                src="{{ user.avatar.url }}"
+                                alt="Current avatar"
+                                class="w-12 h-12 rounded-full object-cover border border-green-100"
+                            />
+                            <span class="text-xs text-gray-400">Current avatar</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn-primary w-full">
+                        Save changes
+                    </button>
+                </form>
+            </div>
+
+            {# Quick links #}
+            <div class="card-padded">
+                <h2 class="section-label mb-3">Quick Links</h2>
+                <ul class="space-y-1.5">
+                    <li>
+                        <a
+                            href="{% url 'marketplace' %}"
+                            class="text-sm text-brand hover:text-brand-dark font-medium transition-colors"
+                            >Marketplace →</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="{% url 'marketplace_invitations' %}"
+                            class="text-sm text-brand hover:text-brand-dark font-medium transition-colors"
+                            >My marketplace invitations →</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="{% url 'tournament:tournament_list' %}"
+                            class="text-sm text-brand hover:text-brand-dark font-medium transition-colors"
+                            >Browse tournaments →</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="{% url 'accounts:profile' user.username %}"
+                            class="text-sm text-brand hover:text-brand-dark font-medium transition-colors"
+                            >My public profile →</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="{% url 'tournament:complaint_list' %}"
+                            class="text-sm text-brand hover:text-brand-dark font-medium transition-colors"
+                            >My complaints/requests &rarr;</a
+                        >
+                    </li>
+                    {% if is_admin_user %}
+                    <li>
+                        <a
+                            href="{% url 'tournament:staff_dashboard' %}"
+                            class="text-sm text-brand hover:text-brand-dark font-medium transition-colors"
+                            >Staff dashboard →</a
+                        >
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

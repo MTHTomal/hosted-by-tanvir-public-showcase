@@ -1,0 +1,64 @@
+{% if leaderboard_rows %}
+<p class="stats-table-hint">Swipe to view all leaderboard columns</p>
+<div class="card table-shell stats-table-shell max-w-2xl">
+    <table class="data-table min-w-[22rem] sm:min-w-[30rem]" aria-label="{{ stat_label }} leaderboard">
+        <thead>
+            <tr>
+                <th class="w-10">
+                    <span aria-hidden="true">#</span>
+                    <span class="stats-table-sr">Rank</span>
+                </th>
+                <th>Player</th>
+                <th class="text-center w-20">{{ stat_label }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in leaderboard_rows %}
+            <tr class="{% if forloop.counter <= 3 %}bg-brand-faint/40{% endif %}">
+                <td class="tabular-nums">
+                    {% if forloop.counter == 1 %}
+                    <span class="font-bold text-amber-500">1</span>
+                    {% elif forloop.counter == 2 %}
+                    <span class="font-bold text-gray-400">2</span>
+                    {% elif forloop.counter == 3 %}
+                    <span class="font-bold text-amber-700">3</span>
+                    {% else %}
+                    <span class="text-gray-300 text-xs">{{ forloop.counter }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a
+                        href="{% url 'accounts:profile' row.player__username %}"
+                        class="font-semibold text-forest hover:text-brand transition-colors"
+                    >
+                        {{ row.player__in_game_name|default:row.player__username }}
+                    </a>
+                    {% if row.player__in_game_name %}
+                    <span class="text-xs text-gray-400 ml-1">@{{ row.player__username }}</span>
+                    {% endif %}
+                </td>
+                <td class="text-center font-bold text-forest tabular-nums text-base">
+                    {{ row.total }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<p class="text-xs text-gray-400 mt-4">
+    Only stats from officially approved results are counted.
+</p>
+{% else %}
+<div class="empty-state">
+    <p class="empty-state-title">{{ empty_title }}</p>
+    <p class="empty-state-body">
+        {{ empty_body }}
+    </p>
+    <a
+        href="{% url 'tournament:tournament_detail' tournament.pk %}"
+        class="btn-outline mt-4"
+        >Back to tournament</a
+    >
+</div>
+{% endif %}

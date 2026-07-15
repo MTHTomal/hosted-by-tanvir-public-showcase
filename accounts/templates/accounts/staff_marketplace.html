@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Marketplace — Staff{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:staff_dashboard' %}">Staff</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">Marketplace</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <p class="section-label mb-1">Staff Operations</p>
+            <h1 class="page-title">Marketplace</h1>
+            <p class="page-subtitle">{{ marketplace_status.message }}</p>
+        </div>
+        <a href="{% url 'staff_marketplace_assign' %}" class="btn-brand shrink-0">Assign player</a>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-4 mb-6">
+        <div class="card-padded text-center">
+            <p class="font-display font-bold text-forest text-2xl">{{ available_players|length }}</p>
+            <p class="section-label mt-1 text-[10px]">Available players</p>
+        </div>
+        <div class="card-padded text-center">
+            <p class="font-display font-bold text-forest text-2xl">{{ recruiting_teams|length }}</p>
+            <p class="section-label mt-1 text-[10px]">Recruiting teams</p>
+        </div>
+        <div class="card-padded text-center">
+            <p class="font-display font-bold text-forest text-2xl">{{ pending_invitations|length }}</p>
+            <p class="section-label mt-1 text-[10px]">Pending invites</p>
+        </div>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-5">
+        <section class="card overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h2 class="font-semibold text-forest text-sm">Available players</h2>
+            </div>
+            {% if available_players %}
+            <ul class="divide-y divide-gray-50">
+                {% for player in available_players %}
+                <li class="px-5 py-3">
+                    <a href="{% url 'accounts:profile' player.username %}" class="text-sm font-medium text-forest hover:text-brand transition-colors">
+                        {{ player.display_name }}
+                    </a>
+                    <p class="text-xs text-gray-400">@{{ player.username }}</p>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="px-5 py-8 text-center">
+                <p class="empty-state-body text-xs">No available players.</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <section class="card overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h2 class="font-semibold text-forest text-sm">Recruiting teams</h2>
+            </div>
+            {% if recruiting_teams %}
+            <ul class="divide-y divide-gray-50">
+                {% for team in recruiting_teams %}
+                <li class="px-5 py-3">
+                    <a href="{% url 'accounts:team_detail' team.pk %}" class="text-sm font-medium text-forest hover:text-brand transition-colors">
+                        {{ team.name }}
+                    </a>
+                    <p class="text-xs text-gray-400">
+                        {{ team.active_memberships_count }} member{{ team.active_memberships_count|pluralize }}{% if team.captain %} &middot; {{ team.captain.display_name }}{% endif %}
+                    </p>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="px-5 py-8 text-center">
+                <p class="empty-state-body text-xs">No teams recruiting.</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <section class="card overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h2 class="font-semibold text-forest text-sm">Pending invites</h2>
+            </div>
+            {% if pending_invitations %}
+            <ul class="divide-y divide-gray-50">
+                {% for invitation in pending_invitations %}
+                <li class="px-5 py-3">
+                    <p class="text-sm font-medium text-forest">
+                        {{ invitation.team.name }} → {{ invitation.player.display_name }}
+                    </p>
+                    <p class="text-xs text-gray-400">
+                        {{ invitation.created_at|date:"M j, Y" }}{% if invitation.invited_by %} by {{ invitation.invited_by.display_name }}{% endif %}
+                    </p>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="px-5 py-8 text-center">
+                <p class="empty-state-body text-xs">No pending invites.</p>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

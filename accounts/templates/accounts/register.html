@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}Create Account{% endblock %}
+{% block content %}
+<div class="min-h-[75vh] flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-sm">
+        <div class="text-center mb-8">
+            <a
+                href="{% url 'tournament:home' %}"
+                class="inline-flex items-center"
+            >
+                <span class="font-light text-forest text-xl tracking-tight"
+                    >Hosted by
+                </span>
+                <span
+                    class="font-display font-bold text-brand text-xl ml-1 tracking-tight"
+                    >Tanvir</span
+                >
+            </a>
+            <p class="text-gray-400 text-sm mt-2">Join the community</p>
+        </div>
+
+        <div class="card p-7">
+            <h1 class="text-xl font-display font-bold text-forest mb-6">
+                Create your account
+            </h1>
+
+            {% if form.non_field_errors %}
+            <div class="alert-error mb-4">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="w-5 h-5 shrink-0"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                </svg>
+                <div>
+                    {% for e in form.non_field_errors %}
+                    <p>{{ e }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <form method="post" novalidate class="space-y-4">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label
+                        class="form-label"
+                        for="{{ form.username.id_for_label }}"
+                        >Username</label
+                    >
+                    {{ form.username }} {% for e in form.username.errors %}
+                    <p class="form-error">{{ e }}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label
+                        class="form-label"
+                        for="{{ form.email.id_for_label }}"
+                        >Email</label
+                    >
+                    {{ form.email }} {% for e in form.email.errors %}
+                    <p class="form-error">{{ e }}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label
+                        class="form-label"
+                        for="{{ form.password1.id_for_label }}"
+                        >Password</label
+                    >
+                    {{ form.password1 }} {% for e in form.password1.errors %}
+                    <p class="form-error">{{ e }}</p>
+                    {% endfor %}
+                    <p class="form-help">
+                        At least 8 characters. Not entirely numeric.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label
+                        class="form-label"
+                        for="{{ form.password2.id_for_label }}"
+                        >Confirm Password</label
+                    >
+                    {{ form.password2 }} {% for e in form.password2.errors %}
+                    <p class="form-error">{{ e }}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <p class="form-label mb-2">I am signing up as a...</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label
+                            class="flex items-start gap-2.5 p-3 border rounded-lg cursor-pointer transition-colors hover:border-gray-300 has-[:checked]:border-brand has-[:checked]:bg-brand-faint border-gray-200"
+                        >
+                            <input
+                                type="radio"
+                                name="role"
+                                value="player"
+                                class="accent-brand mt-0.5 shrink-0"
+                                {%
+                                if
+                                not
+                                form.role.value
+                                or
+                                form.role.value=""
+                                ="player"
+                                %}checked{%
+                                endif
+                                %}
+                                onchange="toggleTeamName(this.value)"
+                            />
+                            <div>
+                                <div class="text-sm font-medium text-gray-800">
+                                    Player
+                                </div>
+                                <div
+                                    class="text-xs text-gray-400 leading-snug mt-0.5"
+                                >
+                                    Join a team
+                                </div>
+                            </div>
+                        </label>
+                        <label
+                            class="flex items-start gap-2.5 p-3 border rounded-lg cursor-pointer transition-colors hover:border-gray-300 has-[:checked]:border-brand has-[:checked]:bg-brand-faint border-gray-200"
+                        >
+                            <input
+                                type="radio"
+                                name="role"
+                                value="owner"
+                                class="accent-brand mt-0.5 shrink-0"
+                                {%
+                                if
+                                form.role.value=""
+                                ="owner"
+                                %}checked{%
+                                endif
+                                %}
+                                onchange="toggleTeamName(this.value)"
+                            />
+                            <div>
+                                <div class="text-sm font-medium text-gray-800">
+                                    Team Owner
+                                </div>
+                                <div
+                                    class="text-xs text-gray-400 leading-snug mt-0.5"
+                                >
+                                    Create a team
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    {% for e in form.role.errors %}
+                    <p class="form-error">{{ e }}</p>
+                    {% endfor %}
+                </div>
+
+                <div
+                    id="team-name-section"
+                    class="form-group"
+                    style="{% if form.role.value != 'owner' %}display:none{% endif %}"
+                >
+                    <label
+                        class="form-label"
+                        for="{{ form.team_name.id_for_label }}"
+                        >Team Name</label
+                    >
+                    {{ form.team_name }} {% for e in form.team_name.errors %}
+                    <p class="form-error">{{ e }}</p>
+                    {% endfor %}
+                    <p class="form-help">
+                        You can change this later. Requires staff approval
+                        before your team is active.
+                    </p>
+                </div>
+
+                <button type="submit" class="btn-primary btn-lg w-full mt-1">
+                    Create account
+                </button>
+            </form>
+        </div>
+
+        <p class="text-center text-sm text-gray-400 mt-5">
+            Already have an account?
+            <a
+                href="{% url 'accounts:login' %}"
+                class="text-brand font-medium hover:text-brand-dark transition-colors"
+            >
+                Sign in
+            </a>
+        </p>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    function toggleTeamName(val) {
+        document.getElementById("team-name-section").style.display =
+            val === "owner" ? "" : "none";
+    }
+</script>
+{% endblock %}

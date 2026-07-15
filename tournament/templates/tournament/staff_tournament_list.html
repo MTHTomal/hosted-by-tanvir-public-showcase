@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% block title %}Tournaments — Staff{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:staff_dashboard' %}">Staff</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">Tournaments</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    <div class="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="page-title">Tournaments</h1>
+            <p class="page-subtitle">All tournaments including drafts.</p>
+        </div>
+        <a
+            href="{% url 'tournament:staff_tournament_create' %}"
+            class="btn-brand shrink-0"
+            >+ New tournament</a
+        >
+    </div>
+
+    {% if tournaments %}
+    <div class="space-y-6">
+        <section>
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="section-label">Current</h2>
+                <span class="text-xs text-gray-400">Registration and active tournaments</span>
+            </div>
+            {% if current_tournaments %}
+            <p class="stats-table-hint">Swipe to view all current tournament columns</p>
+            <div class="card overflow-hidden table-shell stats-table-shell">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tournament</th>
+                            <th class="text-center w-24">Status</th>
+                            <th class="text-center w-20">Entries</th>
+                            <th class="text-center w-20">Fixtures</th>
+                            <th class="w-28"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in current_tournaments %}
+                        <tr>
+                            <td>
+                                <p class="font-semibold text-forest text-sm">
+                                    {{ t.name }}
+                                </p>
+                                <p class="text-xs text-gray-400 mt-0.5">
+                                    {% if t.format == 'hybrid' %}Group + KO{% elif t.format == 'round_robin' %}Round Robin{% else %}Knockout{% endif %}
+                                    &nbsp;·&nbsp;Max {{ t.max_teams }}
+                                </p>
+                            </td>
+                            <td class="text-center">
+                                <span
+                                    class="{% if t.status == 'registration' %}badge-open{% else %}badge-progress{% endif %} text-[10px]"
+                                >
+                                    {{ t.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="text-center tabular-nums text-sm text-gray-600">
+                                {{ t.active_registrations_count }}/{{ t.max_teams }}
+                            </td>
+                            <td class="text-center tabular-nums text-sm text-gray-600">
+                                {{ t.fixtures_count }}
+                            </td>
+                            <td class="text-right">
+                                <div class="flex flex-col items-end gap-1 sm:flex-row sm:items-center">
+                                    <a
+                                        href="{% url 'tournament:staff_tournament_registrations' t.pk %}"
+                                        class="btn-ghost btn-sm text-xs"
+                                        >Entrants</a
+                                    >
+                                    <a
+                                        href="{% url 'tournament:staff_tournament_edit' t.pk %}"
+                                        class="btn-outline btn-sm text-xs"
+                                        >Edit</a
+                                    >
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state py-8">
+                <p class="empty-state-body">No current tournaments.</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <section>
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="section-label">Draft / Upcoming</h2>
+                <span class="text-xs text-gray-400">Preparation queue</span>
+            </div>
+            {% if draft_tournaments %}
+            <p class="stats-table-hint">Swipe to view all draft tournament columns</p>
+            <div class="card overflow-hidden table-shell stats-table-shell">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tournament</th>
+                            <th class="text-center w-24">Status</th>
+                            <th class="text-center w-20">Entries</th>
+                            <th class="text-center w-20">Fixtures</th>
+                            <th class="w-28"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in draft_tournaments %}
+                        <tr>
+                            <td>
+                                <p class="font-semibold text-forest text-sm">
+                                    {{ t.name }}
+                                </p>
+                                <p class="text-xs text-gray-400 mt-0.5">
+                                    {% if t.format == 'hybrid' %}Group + KO{% elif t.format == 'round_robin' %}Round Robin{% else %}Knockout{% endif %}
+                                    &nbsp;·&nbsp;Max {{ t.max_teams }}
+                                </p>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge-draft text-[10px]">
+                                    {{ t.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="text-center tabular-nums text-sm text-gray-600">
+                                {{ t.active_registrations_count }}/{{ t.max_teams }}
+                            </td>
+                            <td class="text-center tabular-nums text-sm text-gray-600">
+                                {{ t.fixtures_count }}
+                            </td>
+                            <td class="text-right">
+                                <div class="flex flex-col items-end gap-1 sm:flex-row sm:items-center">
+                                    <a
+                                        href="{% url 'tournament:staff_tournament_registrations' t.pk %}"
+                                        class="btn-ghost btn-sm text-xs"
+                                        >Entrants</a
+                                    >
+                                    <a
+                                        href="{% url 'tournament:staff_tournament_edit' t.pk %}"
+                                        class="btn-outline btn-sm text-xs"
+                                        >Edit</a
+                                    >
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state py-8">
+                <p class="empty-state-body">No draft tournaments.</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <section>
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="section-label">Past / Archived</h2>
+                <span class="text-xs text-gray-400">Public history and read-only archives</span>
+            </div>
+            {% if past_tournaments %}
+            <p class="stats-table-hint">Swipe to view all archived tournament columns</p>
+            <div class="card overflow-hidden table-shell stats-table-shell">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tournament</th>
+                            <th class="text-center w-24">Status</th>
+                            <th class="text-center w-20">Entries</th>
+                            <th class="text-center w-20">Fixtures</th>
+                            <th class="w-28"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in past_tournaments %}
+                        <tr class="{% if t.status == 'archived' %}bg-slate-50/70{% endif %}">
+                            <td>
+                                <p class="font-semibold text-forest text-sm">
+                                    {{ t.name }}
+                                </p>
+                                <p class="text-xs text-gray-400 mt-0.5">
+                                    {% if t.format == 'hybrid' %}Group + KO{% elif t.format == 'round_robin' %}Round Robin{% else %}Knockout{% endif %}
+                                    &nbsp;·&nbsp;Max {{ t.max_teams }}
+                                    {% if t.status == 'archived' %}&nbsp;·&nbsp;Read-only{% endif %}
+                                </p>
+                            </td>
+                            <td class="text-center">
+                                <span
+                                    class="{% if t.status == 'archived' %}badge-staff{% else %}badge-completed{% endif %} text-[10px]"
+                                >
+                                    {{ t.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="text-center tabular-nums text-sm text-gray-600">
+                                {{ t.active_registrations_count }}/{{ t.max_teams }}
+                            </td>
+                            <td class="text-center tabular-nums text-sm text-gray-600">
+                                {{ t.fixtures_count }}
+                            </td>
+                            <td class="text-right">
+                                <div class="flex flex-col items-end gap-1 sm:flex-row sm:items-center">
+                                    <a
+                                        href="{% url 'tournament:staff_tournament_registrations' t.pk %}"
+                                        class="btn-ghost btn-sm text-xs"
+                                        >Entrants</a
+                                    >
+                                    <a
+                                        href="{% url 'tournament:staff_tournament_edit' t.pk %}"
+                                        class="btn-outline btn-sm text-xs"
+                                        >Edit</a
+                                    >
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state py-8">
+                <p class="empty-state-body">No past tournaments yet.</p>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p class="empty-state-title">No tournaments yet</p>
+        <a
+            href="{% url 'tournament:staff_tournament_create' %}"
+            class="btn-brand mt-4"
+            >Create first tournament</a
+        >
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

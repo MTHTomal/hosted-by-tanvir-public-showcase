@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+{% block title %}{% if stats_only_edit %}Edit Player Stats{% elif is_edit %}Edit Result{% else %}Submit Result{% endif %}{% endblock %}
+{% block main_class %}p-0{% endblock %}
+{% block content %}
+
+<section class="bg-forest">
+    <div class="page-container">
+        <div class="pt-4 pb-2">
+            <nav class="breadcrumb">
+                <a
+                    href="{% url 'tournament:tournament_detail' fixture.tournament.pk %}"
+                    class="text-white/40 hover:text-white/70"
+                    >{{ fixture.tournament.name }}</a
+                >
+                <span class="breadcrumb-sep text-white/20">›</span>
+                <a
+                    href="{% url 'tournament:fixture_detail' fixture.pk %}"
+                    class="text-white/40 hover:text-white/70"
+                    >Match</a
+                >
+                <span class="breadcrumb-sep text-white/20">›</span>
+                <span class="text-white/60">{% if stats_only_edit %}Edit Player Stats{% elif is_edit %}Edit Result{% else %}Submit Result{% endif %}</span>
+            </nav>
+        </div>
+        <div class="py-6 text-center">
+            <p
+                class="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30 mb-3"
+            >
+                {{ fixture.get_stage_display }}{% if fixture.group_label %} · Group {{ fixture.group_label }}{% endif %} · Round {{ fixture.round_number }}
+            </p>
+            <div class="flex items-center justify-center gap-6">
+                <span
+                    class="font-display font-bold text-white text-lg sm:text-xl flex-1 text-right"
+                    >{{ fixture.home_team.name }}</span
+                >
+                <span class="text-white/30 text-base px-2">vs</span>
+                <span
+                    class="font-display font-bold text-white text-lg sm:text-xl flex-1 text-left"
+                    >{{ fixture.away_team.name }}</span
+                >
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="page-container py-8 max-w-2xl">
+    <form
+        method="post"
+        enctype="multipart/form-data"
+        novalidate
+        class="space-y-6"
+    >
+        {% csrf_token %} {% if form.non_field_errors %}
+        <div class="alert-error">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-5 h-5 shrink-0"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+            </svg>
+            <div>
+                {% for e in form.non_field_errors %}
+                <p>{{ e }}</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %} {# SCORE ENTRY #}
+        <div class="card p-6">
+            <h2 class="font-semibold text-forest text-sm mb-5 text-center">
+                Final Score
+            </h2>
+
+            {% if stats_only_edit %}
+            <div class="flex items-center justify-center gap-4 sm:gap-8">
+                <div class="flex-1 text-center">
+                    <p class="text-xs font-semibold text-gray-400 truncate">
+                        {{ fixture.home_team.name }}
+                    </p>
+                    <p class="font-display text-forest text-4xl font-bold tabular-nums">
+                        {{ result.home_score }}
+                    </p>
+                </div>
+                <span class="font-display text-gray-200 text-3xl font-bold select-none">-</span>
+                <div class="flex-1 text-center">
+                    <p class="text-xs font-semibold text-gray-400 truncate">
+                        {{ fixture.away_team.name }}
+                    </p>
+                    <p class="font-display text-forest text-4xl font-bold tabular-nums">
+                        {{ result.away_score }}
+                    </p>
+                </div>
+            </div>
+            {% else %}
+            <div class="flex items-center justify-center gap-4 sm:gap-8">
+                <div class="flex-1 flex flex-col items-center gap-2">
+                    <label
+                        for="{{ form.home_score.id_for_label }}"
+                        class="text-xs font-semibold text-gray-400 text-center truncate max-w-full"
+                    >
+                        {{ fixture.home_team.name }}
+                    </label>
+                    {{ form.home_score }} {% for e in form.home_score.errors %}
+                    <p class="form-error text-center">{{ e }}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="shrink-0 flex flex-col items-center">
+                    <span
+                        class="font-display text-gray-200 text-3xl font-bold select-none"
+                        >–</span
+                    >
+                </div>
+
+                <div class="flex-1 flex flex-col items-center gap-2">
+                    <label
+                        for="{{ form.away_score.id_for_label }}"
+                        class="text-xs font-semibold text-gray-400 text-center truncate max-w-full"
+                    >
+                        {{ fixture.away_team.name }}
+                    </label>
+                    {{ form.away_score }} {% for e in form.away_score.errors %}
+                    <p class="form-error text-center">{{ e }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        {# EVIDENCE SCREENSHOTS #}
+        {% if not stats_only_edit %}
+        <div class="card-padded space-y-4">
+            <div>
+                <label for="{{ form.screenshot.id_for_label }}" class="form-label">{{ form.screenshot.label }}</label>
+                {{ form.screenshot }}
+                <p class="form-help mt-1">{{ form.screenshot.help_text }}</p>
+                {% for e in form.screenshot.errors %}
+                <p class="form-error">{{ e }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                <label for="{{ form.home_player_stats_screenshot.id_for_label }}" class="form-label">{{ form.home_player_stats_screenshot.label }}</label>
+                {{ form.home_player_stats_screenshot }}
+                <p class="form-help mt-1">{{ form.home_player_stats_screenshot.help_text }}</p>
+                {% for e in form.home_player_stats_screenshot.errors %}
+                <p class="form-error">{{ e }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                <label for="{{ form.away_player_stats_screenshot.id_for_label }}" class="form-label">{{ form.away_player_stats_screenshot.label }}</label>
+                {{ form.away_player_stats_screenshot }}
+                <p class="form-help mt-1">{{ form.away_player_stats_screenshot.help_text }}</p>
+                {% for e in form.away_player_stats_screenshot.errors %}
+                <p class="form-error">{{ e }}</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# PLAYER STATS #}
+        {% if stat_formset %}
+        <div class="card overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h2 class="font-semibold text-forest text-sm">Player Stats</h2>
+                <p class="text-xs text-gray-400 mt-0.5">
+                    Select up to four fixture players for this team-based 2v2 result. Goals must match the score above if entered.
+                </p>
+                <p class="text-xs text-gray-400 mt-1">
+                    For compound screenshot stats like Shots (On Target), enter total shots and on-target shots separately.
+                </p>
+            </div>
+
+            {{ stat_formset.management_form }}
+            {% if stat_formset.non_form_errors %}
+            <div class="mx-5 mt-4">
+                <div class="alert-error">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="w-5 h-5 shrink-0"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                    </svg>
+                    <div>
+                        {% for e in stat_formset.non_form_errors %}
+                        <p>{{ e }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% for form in stat_formset.forms %}
+                {% if form.non_field_errors %}
+                <div class="mx-5 mt-4">
+                    <div class="alert-error">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="w-5 h-5 shrink-0"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                        </svg>
+                        <div>
+                            {% for e in form.non_field_errors %}
+                            <p>{{ e }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+
+            <div class="p-4 space-y-3">
+                {% for form in stat_formset.forms %}
+                <details
+                    class="rounded-lg border border-gray-100 bg-white"
+                    {% if form.selected_player_obj or forloop.first %}open{% endif %}
+                >
+                    <summary class="cursor-pointer list-none px-4 py-3">
+                        <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="min-w-0">
+                                <p class="font-semibold text-forest text-sm truncate">
+                                    {% if form.selected_player_obj %}
+                                    {{ form.selected_player_obj.display_name|default:form.selected_player_obj.username }}
+                                    {% else %}
+                                    Player stat entry {{ form.entry_number }}
+                                    {% endif %}
+                                </p>
+                                <p class="text-xs text-gray-400 truncate">
+                                    {{ form.summary_team_label }}
+                                </p>
+                            </div>
+                            <p class="text-xs font-semibold text-gray-500 tabular-nums">
+                                {{ form.summary_quick_stats }}
+                            </p>
+                        </div>
+                    </summary>
+
+                    <div class="border-t border-gray-100 px-4 py-4 space-y-5">
+                        <div>
+                            <label for="{{ form.player_id.id_for_label }}" class="form-label">
+                                Player
+                            </label>
+                            {{ form.player_id }}
+                            <p class="form-help mt-1">
+                                Dropdown labels show whether the player is from the home or away team.
+                            </p>
+                            {% for e in form.player_id.errors %}
+                            <p class="form-error">{{ e }}</p>
+                            {% endfor %}
+                        </div>
+
+                        {% for group in form.field_groups %}
+                        <div>
+                            <h3 class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-3">
+                                {{ group.title }}
+                            </h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                {% for field in group.fields %}
+                                <div>
+                                    <label for="{{ field.id_for_label }}" class="form-label text-[11px]">
+                                        {{ field.label }}
+                                    </label>
+                                    {{ field }}
+                                    {% for e in field.errors %}
+                                    <p class="form-error text-[10px]">{{ e }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </details>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# SUBMIT #}
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <button type="submit" class="btn-primary btn-lg">
+                {% if stats_only_edit %}Save player stats{% elif is_edit %}Save changes{% else %}Submit result{% endif %}
+            </button>
+            <a
+                href="{% url 'tournament:fixture_detail' fixture.pk %}"
+                class="btn-ghost"
+                >Cancel</a
+            >
+        </div>
+    </form>
+</div>
+
+{% endblock %}

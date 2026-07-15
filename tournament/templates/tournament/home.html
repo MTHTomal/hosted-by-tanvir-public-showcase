@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block main_class %}p-0{% endblock %}
+{% block content %}
+<section class="relative bg-forest overflow-hidden">
+    <div
+        class="absolute inset-0 opacity-[0.1] pointer-events-none select-none flex items-center justify-center"
+    >
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 600 800"
+            fill="none"
+            stroke="white"
+            class="w-full h-full"
+            preserveAspectRatio="xMidYMid slice"
+        >
+            <g stroke-width="1.5">
+                <rect x="30" y="30" width="540" height="740" stroke-width="2" />
+                <line x1="30" y1="400" x2="570" y2="400" />
+                <circle cx="300" cy="400" r="80" />
+                <circle cx="300" cy="400" r="4" fill="white" stroke="none" />
+                <rect x="150" y="30" width="300" height="150" />
+                <rect x="220" y="30" width="160" height="58" />
+                <rect x="150" y="620" width="300" height="150" />
+                <rect x="220" y="712" width="160" height="58" />
+                <path d="M55,30 A25,25 0 0,0 30,55" />
+                <path d="M545,30 A25,25 0 0,1 570,55" />
+                <path d="M30,745 A25,25 0 0,0 55,770" />
+                <path d="M570,745 A25,25 0 0,1 545,770" />
+            </g>
+        </svg>
+    </div>
+
+    <div class="relative page-container py-20 sm:py-28 lg:py-32 text-center">
+        <p class="section-label text-brand/70 mb-4 tracking-[0.2em]">
+            E-Football Tournament Platform
+        </p>
+        <h1
+            class="font-display font-semibold text-white text-[3.2rem] sm:text-[4.5rem] lg:text-[5.4rem] leading-[0.92] tracking-[-0.03em] mb-5"
+        >
+            Where rivalries<br />are
+            <span class="text-brand italic font-medium">settled.</span>
+        </h1>
+        <p class="text-white/70 text-base sm:text-xl max-w-2xl mx-auto mb-8 leading-relaxed">
+            Register your team, join a tournament, and compete for the top spot
+            on the table.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a
+                href="{% url 'tournament:tournament_list' %}"
+                class="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/35 text-white rounded-xl text-sm font-semibold hover:bg-white/10 transition-colors"
+            >
+                Browse tournaments
+            </a>
+            {% if discord_link %}
+            <a
+                href="{{ discord_link }}"
+                target="_blank"
+                rel="noopener"
+                class="btn-discord px-6 py-3 rounded-xl text-sm font-semibold"
+            >
+                <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.031.052a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"
+                    />
+                </svg>
+                Join Discord
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="bg-brand-faint border-b border-green-100">
+    <div class="page-container">
+        <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-green-100">
+            <div class="py-6 text-center stat-tile rounded-none shadow-none border-0">
+                <div
+                    class="text-3xl sm:text-4xl font-display font-bold text-forest"
+                >
+                    {{ total_visible_tournaments }}
+                </div>
+                <div class="section-label mt-1">Tournaments</div>
+            </div>
+            <div class="py-6 text-center stat-tile rounded-none shadow-none border-0">
+                <div
+                    class="text-3xl sm:text-4xl font-display font-bold text-forest"
+                >
+                    {{ total_approved_teams }}
+                </div>
+                <div class="section-label mt-1">Teams</div>
+            </div>
+            <div class="py-6 text-center stat-tile rounded-none shadow-none border-0">
+                <div
+                    class="text-3xl sm:text-4xl font-display font-bold text-forest"
+                >
+                    {{ total_active_players }}
+                </div>
+                <div class="section-label mt-1">Players</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="announcement-board page-container page-section">
+    <div class="card overflow-hidden">
+        <div
+            class="announcement-header flex items-center justify-between px-5 py-4 border-b border-gray-100"
+        >
+            <div class="flex items-center gap-2.5">
+                <span class="dot-pulse"></span>
+                <h2 class="font-semibold text-forest text-sm">Announcements</h2>
+            </div>
+            <div class="flex items-center gap-2">
+                <a
+                    href="{% url 'tournament:announcement_list' %}"
+                    class="text-xs text-brand font-medium hover:text-brand-dark transition-colors"
+                >
+                    View all →
+                </a>
+                <span class="badge-staff text-[10px] px-2 py-0.5"
+                    >Staff updates</span
+                >
+            </div>
+        </div>
+        <div class="announcement-scroll max-h-80 overflow-y-auto">
+            {% if announcements %}
+            <ul class="divide-y divide-gray-50">
+                {% for announcement in announcements %}
+                <li class="px-5 py-4">
+                    <time class="text-xs text-gray-400 font-mono mb-1 block"
+                        >{{ announcement.created_at|date:"M j, Y" }}</time
+                    >
+                    <p class="font-semibold text-forest text-sm mb-2">
+                        {{ announcement.title }}
+                    </p>
+                    {% if announcement.body|length > 150 %}
+                    <div class="announcement-item">
+                        <p class="text-sm text-gray-600 leading-relaxed font-mono announcement-preview">
+                            {{ announcement.body|truncatewords:25 }}
+                        </p>
+                        <p class="text-sm text-gray-600 leading-relaxed font-mono announcement-full hidden">
+                            {{ announcement.body }}
+                        </p>
+                        <button class="announcement-toggle text-xs text-brand font-medium hover:text-brand-dark transition-colors mt-2">
+                            Read more
+                        </button>
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-gray-600 leading-relaxed font-mono">
+                        {{ announcement.body }}
+                    </p>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="px-5 py-8 text-center">
+                <p class="text-gray-500 text-sm font-medium">No announcements right now.</p>
+                <p class="text-gray-400 text-xs mt-1">Check back here for schedule notes</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="page-container page-section">
+    <div class="flex items-center justify-between mb-5">
+        <h2 class="section-label">Active Tournaments</h2>
+        <a
+            href="{% url 'tournament:tournament_list' %}"
+            class="text-xs text-brand font-medium hover:text-brand-dark transition-colors"
+        >
+            View all →
+        </a>
+    </div>
+
+    {% if home_tournament_cards %}
+    <div class="grid sm:grid-cols-2 gap-4">
+        {% for tournament in home_tournament_cards %}
+        <div
+            class="card p-5 flex flex-col gap-3 hover:shadow-card-hover transition-shadow {% if tournament.status == 'active' %}border-l-4 border-l-brand{% endif %}"
+        >
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex items-start gap-3">
+                    <div
+                        class="w-9 h-9 rounded-lg bg-brand-faint flex items-center justify-center shrink-0 mt-0.5"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="w-5 h-5 text-brand"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0"
+                            />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3
+                            class="font-semibold text-forest text-sm leading-snug"
+                        >
+                            {{ tournament.public_name|default:tournament.name }}
+                        </h3>
+                        <p class="text-xs text-gray-400 mt-0.5">
+                            {% if tournament.format == 'hybrid' %}Group + KO{% elif tournament.format == 'round_robin' %}Round Robin{% else %}{{ tournament.get_format_display }}{% endif %}
+                            &middot; {{ tournament.registration_count }}/{{ tournament.max_teams }} {{ tournament.participant_label }}
+                        </p>
+                    </div>
+                </div>
+                <span
+                    class="shrink-0 {% if tournament.status == 'registration' %}badge-open{% elif tournament.status == 'active' %}badge-progress{% elif tournament.status == 'draft' %}badge-draft{% else %}badge-completed{% endif %}"
+                >
+                    {% if tournament.status == 'registration' %}Open {% elif tournament.status == 'active' %}In progress {% elif tournament.status == 'completed' %}Completed {% elif tournament.status == 'archived' %}Archived {% elif tournament.status == 'draft' %}Draft {% endif %}
+                </span>
+            </div>
+
+            <div
+                class="flex items-center justify-between mt-auto pt-2 border-t border-gray-50"
+            >
+                <span class="text-xs text-gray-400">
+                    {% if tournament.status == 'registration' and tournament.registration_deadline %}Closes {{ tournament.registration_deadline|date:"M j" }}{% elif tournament.start_date %}{% if tournament.status == 'active' %}Started {% endif %}{{ tournament.start_date|date:"M j, Y" }}{% endif %}
+                </span>
+                <a
+                    href="{% url 'tournament:tournament_detail' tournament.pk %}"
+                    class="btn-outline btn-sm"
+                    >View →</a
+                >
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <p class="empty-state-title">No active tournaments right now</p>
+        <p class="empty-state-body">
+            Check back soon or browse all tournaments.
+        </p>
+        <a
+            href="{% url 'tournament:tournament_list' %}"
+            class="btn-outline mt-4"
+            >Browse tournaments</a
+        >
+    </div>
+    {% endif %}
+</section>
+
+<script>
+document.querySelectorAll('.announcement-toggle').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const container = this.closest('.announcement-item');
+        const preview = container.querySelector('.announcement-preview');
+        const full = container.querySelector('.announcement-full');
+
+        preview.classList.toggle('hidden');
+        full.classList.toggle('hidden');
+
+        this.textContent = this.textContent === 'Read more' ? 'Show less' : 'Read more';
+    });
+});
+</script>
+{% endblock %}

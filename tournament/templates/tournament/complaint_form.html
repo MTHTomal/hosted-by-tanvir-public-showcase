@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}New Complaint/Request{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'accounts:dashboard' %}">Dashboard</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="{% url 'tournament:complaint_list' %}">Complaints/Requests</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">New</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section max-w-3xl">
+    <div class="mb-6">
+        <h1 class="page-title">New Complaint/Request</h1>
+        <p class="page-subtitle">Send a private, plain-text request to staff.</p>
+    </div>
+
+    <div class="card overflow-hidden">
+        <form method="post" novalidate class="p-5 space-y-5">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="alert-error">
+                {% for e in form.non_field_errors %}
+                <p>{{ e }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="grid sm:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.complaint_type.id_for_label }}">Type</label>
+                    {{ form.complaint_type }}
+                    {% for e in form.complaint_type.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.subject.id_for_label }}">Subject</label>
+                    {{ form.subject }}
+                    {% for e in form.subject.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.description.id_for_label }}">Description</label>
+                {{ form.description }}
+                {% for e in form.description.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.fixture.id_for_label }}">Fixture link</label>
+                    {{ form.fixture }}
+                    {% for e in form.fixture.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.result.id_for_label }}">Result link</label>
+                    {{ form.result }}
+                    {% for e in form.result.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-gray-100 flex flex-col gap-2 sm:flex-row sm:items-center">
+                <button type="submit" class="btn-brand">Submit</button>
+                <a href="{% url 'tournament:complaint_list' %}" class="btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

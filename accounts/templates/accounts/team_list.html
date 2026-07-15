@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Teams{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:home' %}">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">Teams</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    <section class="bg-forest text-white rounded-[2rem] overflow-hidden border border-forest-light/40 shadow-card mb-8">
+        <div class="relative px-5 py-10 sm:px-8 lg:px-10">
+            <div class="absolute inset-0 opacity-20 pointer-events-none">
+                <div class="absolute inset-x-6 top-6 bottom-6 rounded-[1.75rem] border border-white/10"></div>
+                <div class="absolute left-1/2 top-6 bottom-6 w-px bg-white/10"></div>
+            </div>
+            <div class="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                <div class="max-w-2xl">
+                    <p class="section-label text-brand/70 mb-4 tracking-[0.2em]">
+                        Community Teams
+                    </p>
+                    <h1 class="font-display text-4xl sm:text-5xl leading-tight text-white">
+                        Clubs built for
+                        <span class="text-brand">competition</span>.
+                    </h1>
+                    <p class="mt-4 max-w-xl text-sm sm:text-base text-white/70">
+                        Browse the approved teams currently active on Hosted by Tanvir.
+                    </p>
+                </div>
+                <div class="grid grid-cols-2 gap-3 sm:w-[22rem]">
+                    <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+                        <p class="text-2xl font-display text-white">{{ teams|length }}</p>
+                        <p class="mt-1 text-[11px] uppercase tracking-[0.25em] text-white/45">
+                            Approved teams
+                        </p>
+                    </div>
+                    <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+                        <p class="text-2xl font-display text-brand">
+                            {% if teams %}{{ teams.0.player_count }}+{% else %}0{% endif %}
+                        </p>
+                        <p class="mt-1 text-[11px] uppercase tracking-[0.25em] text-white/45">
+                            Active rosters
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <p class="section-label mb-1">Approved Directory</p>
+            <h2 class="font-display text-2xl text-forest">Teams in the community</h2>
+        </div>
+        <p class="text-sm text-gray-500">
+            {{ teams|length }} approved team{{ teams|length|pluralize }} ready for tournaments.
+        </p>
+    </div>
+
+    {% if teams %}
+    <div class="grid gap-4 lg:grid-cols-2">
+        {% for team in teams %}
+        <div class="card p-5 hover:shadow-card-hover transition-shadow">
+            <div class="flex flex-col gap-3">
+                <div class="flex items-start gap-4">
+                    <div class="shrink-0">
+                        {% if team.logo %}
+                        <img
+                            src="{{ team.logo.url }}"
+                            alt="{{ team.name }}"
+                            class="w-16 h-16 rounded-2xl object-cover border border-green-100"
+                        />
+                        {% else %}
+                        <div
+                            class="w-16 h-16 rounded-2xl bg-forest flex items-center justify-center text-white font-display font-bold text-2xl"
+                        >
+                            {{ team.name|first|upper }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex-1 min-w-0">
+                        <div class="flex flex-wrap items-center gap-2 mb-2">
+                            <h3 class="font-semibold text-forest text-xl">
+                                {{ team.name }}
+                            </h3>
+                            {% if team.is_recruiting %}
+                            <span class="badge-open">Recruiting</span>
+                            {% else %}
+                            <span class="badge-completed">Roster set</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="text-sm text-gray-500">
+                            {{ team.player_count }} member{{ team.player_count|pluralize }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end border-t border-gray-100 pt-4">
+                    <div>
+                        <p class="text-[11px] font-mono uppercase tracking-[0.22em] text-gray-400">
+                            Captain
+                        </p>
+                        {% if team.captain %}
+                        <a
+                            href="{% url 'accounts:profile' team.captain.username %}"
+                            class="mt-1 inline-block text-sm font-medium text-forest hover:text-brand transition-colors"
+                        >
+                            {{ team.captain.display_name }}
+                        </a>
+                        {% else %}
+                        <p class="mt-1 text-sm text-gray-400">To be assigned</p>
+                        {% endif %}
+                    </div>
+
+                    <a
+                        href="{% url 'accounts:team_detail' team.pk %}"
+                        class="btn-outline btn-sm shrink-0"
+                        >View team →</a
+                    >
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <p class="empty-state-title">No teams yet</p>
+        <p class="empty-state-body">
+            Teams appear here once approved by staff.
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

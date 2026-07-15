@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Invite {{ invite_player.display_name }}{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'marketplace' %}">Marketplace</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">Invite player</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section max-w-2xl">
+    <div class="mb-6">
+        <p class="section-label mb-1">Captain Invite</p>
+        <h1 class="page-title">Invite {{ invite_player.display_name }}</h1>
+        <p class="page-subtitle">@{{ invite_player.username }}{% if invite_player.in_game_name %} &middot; IGN: {{ invite_player.in_game_name }}{% endif %}</p>
+    </div>
+
+    <div class="card-padded">
+        <form method="post" class="space-y-5" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="alert-error text-xs">
+                {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+            <div class="form-group">
+                <label class="form-label" for="{{ form.team.id_for_label }}">Team</label>
+                {{ form.team }}
+                {% for error in form.team.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.message.id_for_label }}">Message</label>
+                {{ form.message }}
+                {% for error in form.message.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="flex flex-col gap-2 sm:flex-row">
+                <button type="submit" class="btn-primary">Send invite</button>
+                <a href="{% url 'marketplace' %}" class="btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

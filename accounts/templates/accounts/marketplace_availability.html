@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}My Availability{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'marketplace' %}">Marketplace</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">My availability</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section max-w-2xl">
+    <div class="mb-6">
+        <p class="section-label mb-1">Marketplace</p>
+        <h1 class="page-title">My availability</h1>
+        {% if active_membership %}
+        <p class="page-subtitle">Current team: {{ active_membership.team.name }}</p>
+        {% endif %}
+    </div>
+
+    <div class="card-padded">
+        <form method="post" class="space-y-5" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="alert-error text-xs">
+                {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+            <label class="flex items-start gap-3 text-sm font-medium text-forest" for="{{ form.available_for_recruitment.id_for_label }}">
+                {{ form.available_for_recruitment }}
+                <span>{{ form.available_for_recruitment.label }}</span>
+            </label>
+            {% for error in form.available_for_recruitment.errors %}
+            <p class="form-error">{{ error }}</p>
+            {% endfor %}
+            <div class="flex flex-col gap-2 sm:flex-row">
+                <button type="submit" class="btn-primary">Save availability</button>
+                <a href="{% url 'marketplace' %}" class="btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

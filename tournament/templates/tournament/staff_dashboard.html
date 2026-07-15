@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+{% block title %}Staff Dashboard{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:home' %}">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">Staff Dashboard</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    <div
+        class="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between"
+    >
+        <div class="min-w-0">
+            <h1 class="page-title">Staff Dashboard</h1>
+            <p class="page-subtitle">
+                Operational overview — act on what matters now.
+            </p>
+        </div>
+        <a
+            href="{% url 'tournament:staff_tournament_create' %}"
+            class="btn-brand shrink-0"
+            >+ New tournament</a
+        >
+    </div>
+
+    {# ─── URGENT BAR ───────────────────────────────────────────────── #}
+    {% if pending_result_count or disputed_result_count or score_conflict_result_count or active_complaint_count or pending_team_count %}
+    <div class="flex flex-col flex-wrap gap-3 mb-6 sm:flex-row">
+        {% if score_conflict_result_count %}
+        <a
+            href="{% url 'tournament:admin_queue' %}?status=pending"
+            class="flex items-center gap-2 px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors"
+        >
+            <span class="dot-red shrink-0"></span>
+            <span class="text-sm font-semibold text-red-800 flex-1 min-w-0"
+                >{{ score_conflict_result_count }} score conflict{{ score_conflict_result_count|pluralize }}</span
+            >
+            <span class="text-red-400 text-xs ml-1 shrink-0">Review →</span>
+        </a>
+        {% endif %}
+        {% if pending_result_count %}
+        <a
+            href="{% url 'tournament:admin_queue' %}?status=pending"
+            class="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 transition-colors"
+        >
+            <span class="dot-amber shrink-0"></span>
+            <span class="text-sm font-semibold text-amber-800 flex-1 min-w-0"
+                >{{ pending_result_count }} pending result{{ pending_result_count|pluralize }}</span
+            >
+            <span class="text-amber-500 text-xs ml-1 shrink-0">Review →</span>
+        </a>
+        {% endif %}
+        {% if disputed_result_count %}
+        <a
+            href="{% url 'tournament:admin_queue' %}?status=disputed"
+            class="flex items-center gap-2 px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors"
+        >
+            <span class="dot-red shrink-0"></span>
+            <span class="text-sm font-semibold text-red-800 flex-1 min-w-0"
+                >{{ disputed_result_count }} disputed result{{ disputed_result_count|pluralize }}</span
+            >
+            <span class="text-red-400 text-xs ml-1 shrink-0">Review →</span>
+        </a>
+        {% endif %}
+        {% if matching_result_count %}
+        <a
+            href="{% url 'tournament:admin_queue' %}?status=pending"
+            class="flex items-center gap-2 px-4 py-2.5 bg-green-50/50 border border-green-100 rounded-xl hover:bg-sage transition-colors"
+        >
+            <span class="dot-green shrink-0"></span>
+            <span class="text-sm font-semibold text-green-700 flex-1 min-w-0"
+                >{{ matching_result_count }} score{{ matching_result_count|pluralize }} match</span
+            >
+            <span class="text-green-600 text-xs ml-1 shrink-0">Approve →</span>
+        </a>
+        {% endif %}
+        {% if active_complaint_count %}
+        <a
+            href="{% url 'tournament:staff_complaint_list' %}"
+            class="flex items-center gap-2 px-4 py-2.5 bg-sage border border-green-100 rounded-xl hover:bg-green-50 transition-colors"
+        >
+            <span class="dot-green shrink-0"></span>
+            <span class="text-sm font-semibold text-green-800 flex-1 min-w-0"
+                >{{ active_complaint_count }} complaint/request{{ active_complaint_count|pluralize }}</span
+            >
+            <span class="text-green-600 text-xs ml-1 shrink-0">Review →</span>
+        </a>
+        {% endif %}
+        {% if pending_team_count %}
+        <a
+            href="{% url 'accounts:staff_team_list' %}"
+            class="flex items-center gap-2 px-4 py-2.5 bg-violet-50 border border-violet-200 rounded-xl hover:bg-violet-100 transition-colors"
+        >
+            <span class="dot-violet shrink-0"></span>
+            <span class="text-sm font-semibold text-violet-800 flex-1 min-w-0"
+                >{{ pending_team_count }} team{{ pending_team_count|pluralize }}
+                awaiting approval</span
+            >
+            <span class="text-violet-400 text-xs ml-1 shrink-0">Review →</span>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+    {# ─── STAT TILES ───────────────────────────────────────────────── #}
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        <div class="card-padded text-center">
+            <p class="font-display font-bold text-forest text-2xl">
+                {{ tournament_count }}
+            </p>
+            <p class="section-label mt-1 text-[10px]">Tournaments</p>
+        </div>
+        <div class="card-padded text-center">
+            <p class="font-display font-bold text-green-600 text-2xl">
+                {{ registration_open_count }}
+            </p>
+            <p class="section-label mt-1 text-[10px]">Reg. Open</p>
+        </div>
+        <div class="card-padded text-center">
+            <p class="font-display font-bold text-forest text-2xl">
+                {{ registration_count }}
+            </p>
+            <p class="section-label mt-1 text-[10px]">Active Entries</p>
+        </div>
+        <div class="card-padded text-center">
+            <p class="font-display font-bold text-forest text-2xl">
+                {{ player_count }}
+            </p>
+            <p class="section-label mt-1 text-[10px]">Players</p>
+        </div>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-5 mb-5">
+        {# Current tournaments #}
+        <div class="card overflow-hidden">
+            <div
+                class="px-5 py-4 border-b border-gray-100 flex items-center justify-between"
+            >
+                <h2 class="font-semibold text-forest text-sm">
+                    Current Tournaments
+                </h2>
+                <a
+                    href="{% url 'tournament:staff_tournament_list' %}"
+                    class="text-xs text-brand hover:text-brand-dark font-medium transition-colors"
+                    >All →</a
+                >
+            </div>
+            {% if current_tournaments %}
+            <ul class="divide-y divide-gray-50">
+                {% for t in current_tournaments %}
+                <li
+                    class="flex flex-col items-start gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                    <div class="min-w-0">
+                        <p class="text-sm font-medium text-forest truncate">
+                            {{ t.name }}
+                        </p>
+                        <p class="text-xs text-gray-400 mt-0.5">
+                            {{ t.active_registrations_count }}/{{ t.max_teams }}
+                            {{ t.participant_label }} &nbsp;·&nbsp;
+                            <span
+                                class="{% if t.status == 'registration' %}text-green-600{% elif t.status == 'active' %}text-amber-600{% else %}text-gray-400{% endif %}"
+                            >
+                                {{ t.get_status_display }}
+                            </span>
+                        </p>
+                    </div>
+                    <a
+                        href="{% url 'tournament:staff_tournament_edit' t.pk %}"
+                        class="btn-ghost btn-sm shrink-0"
+                        >Manage</a
+                    >
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="px-5 py-8 text-center">
+                <p class="empty-state-body text-xs">
+                    No active tournaments right now.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+
+        {# Draft/upcoming tournaments #}
+        <div class="card overflow-hidden">
+            <div
+                class="px-5 py-4 border-b border-gray-100 flex items-center justify-between"
+            >
+                <h2 class="font-semibold text-forest text-sm">
+                    Draft / Upcoming
+                </h2>
+                <a
+                    href="{% url 'tournament:staff_tournament_create' %}"
+                    class="text-xs text-brand hover:text-brand-dark font-medium transition-colors"
+                    >New →</a
+                >
+            </div>
+            {% if draft_tournaments %}
+            <ul class="divide-y divide-gray-50">
+                {% for t in draft_tournaments %}
+                <li
+                    class="flex flex-col items-start gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                    <div class="min-w-0">
+                        <p class="text-sm font-medium text-forest truncate">
+                            {{ t.name }}
+                        </p>
+                        <p class="text-xs text-gray-400 mt-0.5">
+                            {{ t.active_registrations_count }}/{{ t.max_teams }}
+                            {{ t.participant_label }} &nbsp;·&nbsp;
+                            <span class="text-gray-500">{{ t.get_status_display }}</span>
+                        </p>
+                    </div>
+                    <a
+                        href="{% url 'tournament:staff_tournament_edit' t.pk %}"
+                        class="btn-ghost btn-sm shrink-0"
+                        >Prepare</a
+                    >
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="px-5 py-8 text-center">
+                <p class="empty-state-body text-xs">
+                    No draft tournaments waiting.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+
+        {# Past tournaments #}
+        <div class="card overflow-hidden">
+            <div
+                class="px-5 py-4 border-b border-gray-100 flex items-center justify-between"
+            >
+                <h2 class="font-semibold text-forest text-sm">
+                    Past / Archived
+                </h2>
+                <a
+                    href="{% url 'tournament:staff_tournament_list' %}"
+                    class="text-xs text-brand hover:text-brand-dark font-medium transition-colors"
+                    >History →</a
+                >
+            </div>
+            {% if past_tournaments %}
+            <ul class="divide-y divide-gray-50">
+                {% for t in past_tournaments %}
+                <li
+                    class="flex flex-col items-start gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                    <div class="min-w-0">
+                        <p class="text-sm font-medium text-forest truncate">
+                            {{ t.name }}
+                        </p>
+                        <p class="text-xs text-gray-400 mt-0.5">
+                            {{ t.active_registrations_count }}/{{ t.max_teams }}
+                            {{ t.participant_label }} &nbsp;·&nbsp;
+                            <span class="{% if t.status == 'archived' %}text-slate-600 font-medium{% else %}text-gray-500{% endif %}">
+                                {{ t.get_status_display }}
+                            </span>
+                        </p>
+                    </div>
+                    <a
+                        href="{% url 'tournament:tournament_detail' t.pk %}"
+                        class="btn-ghost btn-sm shrink-0"
+                        >View</a
+                    >
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="px-5 py-8 text-center">
+                <p class="empty-state-body text-xs">
+                    No past tournaments yet.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-5">
+        {% include "accounts/partials/recent_notifications.html" %}
+
+        {# Recent results #}
+        <div class="card overflow-hidden">
+            <div
+                class="px-5 py-4 border-b border-gray-100 flex items-center justify-between"
+            >
+                <h2 class="font-semibold text-forest text-sm">
+                    Recent Results
+                </h2>
+                <a
+                    href="{% url 'tournament:admin_queue' %}"
+                    class="text-xs text-brand hover:text-brand-dark font-medium transition-colors"
+                    >Queue →</a
+                >
+            </div>
+            {% if recent_results %}
+            <ul class="divide-y divide-gray-50">
+                {% for result in recent_results %}
+                <li
+                    class="flex flex-col items-start gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                    <div class="min-w-0">
+                        <p class="text-xs font-medium text-forest truncate">
+                            {{ result.fixture.home_team.name }} vs {{ result.fixture.away_team.name }}
+                        </p>
+                        <p class="text-xs text-gray-400">
+                            {{ result.fixture.tournament.name }} &middot; {{ result.submitted_at|date:"M j" }}
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                        <span
+                            class="{% if result.status == 'approved' %}badge-approved{% elif result.status == 'disputed' %}badge-disputed{% elif result.status == 'rejected' %}badge-rejected{% else %}badge-pending{% endif %} text-[10px]"
+                        >
+                            {{ result.get_status_display }}
+                        </span>
+                        <span
+                            class="{% if result.opponent_score_state == 'matching' %}badge-approved{% elif result.opponent_score_state == 'score_conflict' %}badge-disputed{% else %}badge-pending{% endif %} text-[10px]"
+                        >
+                            {{ result.opponent_score_state_label }}
+                        </span>
+                        <a
+                            href="{% url 'tournament:fixture_detail' result.fixture.pk %}"
+                            class="text-xs text-gray-400 hover:text-brand transition-colors"
+                            >→</a
+                        >
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="px-5 py-8 text-center">
+                <p class="empty-state-body text-xs">
+                    No results submitted yet.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Quick links #}
+    <div class="mt-6 flex flex-wrap gap-2">
+        <a
+            href="{% url 'tournament:staff_tournament_list' %}"
+            class="btn-outline btn-sm"
+            >All tournaments</a
+        >
+        <a href="{% url 'tournament:admin_queue' %}" class="btn-outline btn-sm"
+            >Result queue</a
+        >
+        <a
+            href="{% url 'tournament:staff_export_dashboard' %}"
+            class="btn-outline btn-sm"
+            >CSV exports</a
+        >
+        <a
+            href="{% url 'tournament:staff_announcement_list' %}"
+            class="btn-outline btn-sm"
+            >Announcements</a
+        >
+        <a
+            href="{% url 'tournament:staff_complaint_list' %}"
+            class="btn-outline btn-sm"
+            >Complaints/requests</a
+        >
+        <a
+            href="{% url 'accounts:staff_team_list' %}"
+            class="btn-outline btn-sm"
+            >Teams</a
+        >
+        <a
+            href="{% url 'accounts:staff_player_list' %}"
+            class="btn-outline btn-sm"
+            >Players</a
+        >
+        <a
+            href="{% url 'staff_marketplace' %}"
+            class="btn-outline btn-sm"
+            >Marketplace</a
+        >
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Players — Staff{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:staff_dashboard' %}">Staff</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">Players</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    <div class="mb-6">
+        <h1 class="page-title">Players</h1>
+        <p class="page-subtitle">All registered players.</p>
+    </div>
+
+    {% if players %}
+    <p class="stats-table-hint">Swipe to view all player columns</p>
+    <div class="card overflow-hidden table-shell stats-table-shell">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th class="text-center w-20">Team</th>
+                    <th class="w-24"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player in players %}
+                <tr>
+                    <td>
+                        <p class="font-semibold text-forest text-sm">
+                            {{ player.display_name }}
+                        </p>
+                        <p class="text-xs text-gray-400">
+                            @{{ player.username }} &middot;
+                            <span class="font-mono"
+                                >{{ player.unique_id }}</span
+                            >
+                        </p>
+                    </td>
+                    <td class="text-center">
+                        {% if player.active_team_count %}
+                        <span class="dot-green"></span>
+                        {% else %}
+                        <span class="dot-gray"></span>
+                        {% endif %}
+                    </td>
+                    <td class="text-right">
+                        <div class="flex flex-col items-end gap-1 sm:flex-row sm:items-center">
+                            <a
+                                href="{% url 'accounts:profile' player.username %}"
+                                class="text-xs text-gray-400 hover:text-brand transition-colors"
+                                >Profile</a
+                            >
+                            <a
+                                href="{% url 'accounts:staff_player_edit' player.username %}"
+                                class="text-xs text-brand hover:text-brand-dark font-medium transition-colors"
+                                >Edit</a
+                            >
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p class="empty-state-title">No players yet</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

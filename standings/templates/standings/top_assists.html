@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Top Assists — {{ tournament.name }}{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb flex-wrap">
+        <a href="{% url 'tournament:home' %}">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="{% url 'tournament:tournament_list' %}">Tournaments</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="{% url 'tournament:tournament_detail' tournament.pk %}"
+            class="min-w-0 max-w-[10rem] truncate sm:max-w-none"
+            >{{ tournament.name }}</a
+        >
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">Top Assists</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    <div class="mb-6">
+        <p class="section-label mb-1 max-w-[10rem] truncate sm:max-w-none">{{ tournament.name }}</p>
+        <div class="flex flex-wrap items-center gap-3">
+            <h1 class="page-title">Top Assists</h1>
+            <a
+                href="{% url 'standings:top_scorers' tournament.pk %}"
+                class="text-xs text-brand hover:text-brand-dark font-medium transition-colors"
+            >
+                View Top Scorers →
+            </a>
+        </div>
+    </div>
+
+    {% include "standings/partials/player_leaderboard_table.html" with leaderboard_rows=leaderboard_rows stat_label="Assists" empty_title="No assists yet" empty_body="Assists are published when match results are approved by staff." %}
+</div>
+{% endblock %}

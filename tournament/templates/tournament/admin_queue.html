@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+{% block title %}Result Queue{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:staff_dashboard' %}">Staff</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">Result Queue</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    <div class="mb-6">
+        <h1 class="page-title">Result Queue</h1>
+        <p class="page-subtitle">
+            Review, approve, or dispute submitted match results.
+        </p>
+        <p class="text-xs text-gray-400 mt-1">
+            Opponent responses are advisory only. Staff moderation is the final authority.
+            Matching scores do not auto-approve, and score conflicts do not block override.
+        </p>
+    </div>
+
+    {# Status tabs #}
+    <div class="tab-nav mb-6">
+        <a
+            href="?status=pending"
+            class="{% if current_status == 'pending' %}tab-item-active{% else %}tab-item{% endif %}"
+        >
+            Pending {% if pending_count %}<span class="ml-1 text-xs opacity-60"
+                >({{ pending_count }})</span
+            >{% endif %}
+        </a>
+        <a
+            href="?status=disputed"
+            class="{% if current_status == 'disputed' %}tab-item-active{% else %}tab-item{% endif %}"
+        >
+            Disputed {% if disputed_count %}<span
+                class="ml-1 text-xs opacity-60"
+                >({{ disputed_count }})</span
+            >{% endif %}
+        </a>
+        <a
+            href="?status=approved"
+            class="{% if current_status == 'approved' %}tab-item-active{% else %}tab-item{% endif %}"
+        >
+            Approved
+        </a>
+        <a
+            href="?status=rejected"
+            class="{% if current_status == 'rejected' %}tab-item-active{% else %}tab-item{% endif %}"
+        >
+            Rejected
+        </a>
+    </div>
+    <div class="flex flex-wrap gap-2 mb-6 text-xs">
+        <span class="badge-approved text-[10px]">
+            {{ matching_count }} scores match / ready for staff approval
+        </span>
+        <span class="badge-disputed text-[10px]">
+            {{ score_conflict_count }} score conflict{{ score_conflict_count|pluralize }} / review needed
+        </span>
+    </div>
+
+    {% if results %}
+    <div class="space-y-4">
+        {% for result in results %}
+        <div
+            class="card overflow-hidden {% if result.status == 'disputed' %}border-l-4 border-l-red-400{% elif result.status == 'pending' %}border-l-4 border-l-amber-400{% endif %}"
+        >
+            {# Header #}
+            <div class="px-5 py-4 border-b border-gray-100">
+                <div class="flex items-start justify-between gap-3 flex-wrap">
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <p class="font-semibold text-forest text-sm">
+                                {{ result.fixture.home_team.name }} vs {{ result.fixture.away_team.name }}
+                            </p>
+                            <span
+                                class="font-display font-bold text-forest text-base tabular-nums"
+                            >
+                                {{ result.home_score }} – {{ result.away_score }}
+                            </span>
+                            <span
+                                class="{% if result.opponent_score_state == 'matching' %}badge-approved{% elif result.opponent_score_state == 'score_conflict' %}badge-disputed{% else %}badge-pending{% endif %} text-[10px]"
+                            >
+                                {{ result.opponent_score_state_label }}
+                            </span>
+                            <span
+                                class="{% if result.status == 'disputed' %}badge-disputed{% elif result.status == 'approved' %}badge-approved{% elif result.status == 'rejected' %}badge-rejected{% else %}badge-pending{% endif %} text-[10px]"
+                            >
+                                {{ result.get_status_display }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">
+                            <a
+                                href="{% url 'tournament:tournament_detail' result.fixture.tournament.pk %}"
+                                class="hover:text-brand transition-colors"
+                                >{{ result.fixture.tournament.name }}</a
+                            >
+                            &nbsp;·&nbsp; Submitted {{ result.submitted_at|date:"M j, Y H:i" }}
+                            {% if result.submitted_by %} by {{ result.submitted_by.display_name|default:result.submitted_by.username }}{% endif %}
+                            {% if result.submitting_team %} ({{ result.submitting_team.name }}){% endif %}
+                        </p>
+                    </div>
+                    <a
+                        href="{% url 'tournament:fixture_detail' result.fixture.pk %}"
+                        class="text-xs text-brand hover:text-brand-dark font-medium transition-colors shrink-0"
+                        >View match →</a
+                    >
+                </div>
+
+                {# Opponent response #}
+                {% if result.has_opponent_score or result.opponent_response_status != 'pending' %}
+                <div class="mt-2 flex flex-wrap items-center gap-2">
+                    <span class="text-xs text-gray-400">Submitted score:</span>
+                    <span class="text-xs font-semibold text-forest tabular-nums">{{ result.home_score }}–{{ result.away_score }}</span>
+                    {% if result.has_opponent_score %}
+                    <span class="text-xs text-gray-400">Opponent score:</span>
+                    <span class="text-xs font-semibold text-forest tabular-nums">{{ result.opponent_home_score }}–{{ result.opponent_away_score }}</span>
+                    {% endif %}
+                    <span class="text-xs text-gray-400">Opponent response (advisory):</span>
+                    <span
+                        class="text-xs font-semibold {% if result.opponent_score_state == 'matching' %}text-green-600{% elif result.opponent_score_state == 'score_conflict' %}text-red-600{% else %}text-amber-600{% endif %}"
+                    >
+                        {% if result.opponent_score_state == 'matching' %}Scores match / ready for staff approval{% elif result.opponent_score_state == 'score_conflict' %}Score conflict / review needed{% elif result.opponent_response_status == 'confirmed' %}Confirmed{% else %}Opponent disputed{% endif %}
+                    </span>
+                    {% if result.opponent_response_note %}
+                    <span class="text-xs text-gray-500"
+                        >"{{ result.opponent_response_note }}"</span
+                    >
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            {% if result.screenshot or result.home_player_stats_screenshot or result.away_player_stats_screenshot %}
+            <div class="px-5 py-3 border-b border-gray-50 bg-slate-50/60">
+                <p
+                    class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2"
+                >
+                    Evidence
+                </p>
+                <div class="flex flex-wrap gap-4 text-xs">
+                    {% if result.screenshot %}
+                    <a
+                        href="{% if result.screenshot.url %}{{ result.screenshot.url }}{% else %}{{ result.screenshot }}{% endif %}"
+                        target="_blank"
+                        rel="noopener"
+                        class="text-brand hover:text-brand-dark font-medium"
+                    >
+                        Match screenshot
+                    </a>
+                    {% endif %}
+                    {% if result.home_player_stats_screenshot %}
+                    <a
+                        href="{% if result.home_player_stats_screenshot.url %}{{ result.home_player_stats_screenshot.url }}{% else %}{{ result.home_player_stats_screenshot }}{% endif %}"
+                        target="_blank"
+                        rel="noopener"
+                        class="text-brand hover:text-brand-dark font-medium"
+                    >
+                        Home team player-stat screenshot
+                    </a>
+                    {% endif %}
+                    {% if result.away_player_stats_screenshot %}
+                    <a
+                        href="{% if result.away_player_stats_screenshot.url %}{{ result.away_player_stats_screenshot.url }}{% else %}{{ result.away_player_stats_screenshot }}{% endif %}"
+                        target="_blank"
+                        rel="noopener"
+                        class="text-brand hover:text-brand-dark font-medium"
+                    >
+                        Away team player-stat screenshot
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {# Submitted player stats #}
+            {% if result.submitted_player_stats.all %}
+            <div class="px-5 py-3 border-b border-gray-50 bg-sage/30">
+                <p
+                    class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2"
+                >
+                    Submitted Stats
+                </p>
+                <div class="flex flex-wrap gap-3">
+                    {% for stat in result.submitted_player_stats.all %}
+                    {% if stat.goals or stat.own_goals or stat.assists or stat.yellow_cards or stat.red_cards %}
+                    <span class="text-xs text-gray-600">
+                        <span class="font-medium text-forest"
+                            >{{ stat.player.display_name|default:stat.player.username }}</span
+                        >
+                        {% if stat.goals %}&nbsp;G {{ stat.goals }}{% endif %}
+                        {% if stat.own_goals %}&nbsp;OG {{ stat.own_goals }}{% endif %}
+                        {% if stat.assists %}&nbsp;🅰️ {{ stat.assists }}{% endif %} {% if stat.yellow_cards %}&nbsp;🟨 {{ stat.yellow_cards }}{% endif %} {% if stat.red_cards %}&nbsp;🟥 {{ stat.red_cards }}{% endif %}
+                    </span>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% if result.admin_note %}
+            <div class="px-5 py-3 border-b border-gray-50 bg-slate-50/60">
+                <p class="text-[10px] font-semibold uppercase tracking-wider {% if 'score-only fallback' in result.admin_note|lower %}text-amber-700{% else %}text-gray-400{% endif %} mb-1">
+                    {% if 'score-only fallback' in result.admin_note|lower %}Score-only fallback{% else %}Staff note{% endif %}
+                </p>
+                <p class="text-xs {% if 'score-only fallback' in result.admin_note|lower %}text-amber-800{% else %}text-gray-600{% endif %}">
+                    {{ result.admin_note }}
+                </p>
+            </div>
+            {% endif %}
+            {# Moderation actions #}
+            {% if result.fixture.tournament.is_archived %}
+            <div class="px-5 py-3 text-xs text-gray-500 bg-slate-50/70">
+                Archived tournament - result moderation is read-only.
+            </div>
+            {% elif result.status != 'approved' %}
+            <div
+                class="px-5 py-4 flex flex-wrap items-center gap-3 bg-gray-50/50"
+            >
+                <a
+                    href="{% url 'tournament:result_edit' result.pk %}"
+                    class="btn-outline btn-sm"
+                    >Edit result</a
+                >
+                {% if result.opponent_score_state == 'matching' %}
+                <span class="text-xs text-green-700">Scores match, but approval is still manual.</span>
+                {% elif result.opponent_score_state == 'score_conflict' %}
+                <span class="text-xs text-red-700">Score conflict flagged; staff may still override.</span>
+                {% endif %}
+
+                <form
+                    method="post"
+                    action="{% url 'tournament:result_approve' result.pk %}"
+                >
+                    {% csrf_token %}
+                    <button type="submit" class="btn-brand btn-sm">
+                        Approve
+                    </button>
+                </form>
+
+                <form
+                    method="post"
+                    action="{% url 'tournament:result_reject' result.pk %}"
+                    class="flex flex-wrap items-center gap-2"
+                >
+                    {% csrf_token %}
+                    <input
+                        type="text"
+                        name="admin_note"
+                        placeholder="Rejection note…"
+                        class="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-brand w-40"
+                    />
+                    <button
+                        type="submit"
+                        class="btn-sm border border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 rounded-lg px-3 py-1.5 text-xs font-medium transition-all"
+                    >
+                        Reject
+                    </button>
+                </form>
+
+                {% if result.status != 'disputed' %}
+                <form
+                    method="post"
+                    action="{% url 'tournament:result_dispute' result.pk %}"
+                    class="flex flex-wrap items-center gap-2"
+                >
+                    {% csrf_token %}
+                    <input
+                        type="text"
+                        name="admin_note"
+                        placeholder="Dispute note…"
+                        class="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-brand w-40"
+                    />
+                    <button
+                        type="submit"
+                        class="btn-sm border border-amber-200 text-amber-600 hover:bg-amber-500 hover:text-white hover:border-amber-500 rounded-lg px-3 py-1.5 text-xs font-medium transition-all"
+                    >
+                        Mark disputed
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="px-5 py-3 text-xs text-gray-400 bg-green-50/50">
+                Approved by {{ result.reviewed_by.display_name|default:"staff" }} {% if result.reviewed_at %}on {{ result.reviewed_at|date:"M j, Y" }}{% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <p class="empty-state-title">Queue is clear</p>
+        <p class="empty-state-body">
+            No {{ current_status }} results right now.
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

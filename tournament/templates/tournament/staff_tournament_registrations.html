@@ -1,0 +1,605 @@
+{% extends "base.html" %}
+{% block title %}Entrants — {{ tournament.name }}{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:staff_dashboard' %}">Staff</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="{% url 'tournament:staff_tournament_list' %}">Tournaments</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">{{ tournament.name }}</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    {# Workspace nav #}
+    <div
+        class="flex items-center gap-2 mb-6 pb-4 border-b border-gray-100 overflow-x-auto"
+    >
+        <span class="text-xs text-gray-400 font-medium shrink-0"
+            >{{ tournament.name }}:</span
+        >
+        <a
+            href="{% url 'tournament:staff_tournament_edit' tournament.pk %}"
+            class="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-forest hover:bg-sage rounded-full transition-colors shrink-0"
+        >
+            Settings
+        </a>
+        <span
+            class="px-3 py-1.5 text-xs font-medium bg-forest text-white rounded-full shrink-0"
+            >Entrants & Groups</span
+        >
+        <a
+            href="{% url 'tournament:tournament_detail' tournament.pk %}"
+            class="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-forest hover:bg-sage rounded-full transition-colors shrink-0"
+        >
+            Public page ↗
+        </a>
+        <a
+            href="{% url 'tournament:admin_queue' %}"
+            class="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-forest hover:bg-sage rounded-full transition-colors shrink-0"
+        >
+            Result queue {% if pending_result_count > 0 %}
+            <span
+                class="ml-1 bg-red-500 text-white text-[10px] font-bold rounded-full px-1"
+                >{{ pending_result_count }}</span
+            >
+            {% endif %}
+        </a>
+    </div>
+
+    {# Stats bar #}
+    <div class="flex flex-wrap items-center gap-4 mb-5 text-sm">
+        <span class="text-gray-500"
+            >{{ active_registration_count }}<span
+                class="text-gray-400 font-normal"
+            >
+                active</span
+            ></span
+        >
+        <span class="text-gray-300">|</span>
+        <span class="text-gray-500"
+            >{{ inactive_registration_count }}<span
+                class="text-gray-400 font-normal"
+            >
+                inactive</span
+            ></span
+        >
+        <span class="text-gray-300">|</span>
+        <span class="text-gray-500"
+            >{{ fixtures_count }}<span class="text-gray-400 font-normal">
+                fixtures</span
+            ></span
+        >
+        {% if entrant_lock_reason %}
+        <span class="badge-pending text-[10px]"
+            >Locked: {{ entrant_lock_state }}</span
+        >
+        {% else %}
+        <span class="badge-open text-[10px]">Entrants editable</span>
+        {% endif %} {% if active_team_registrations_needing_attention > 0 %}
+        <span class="badge-disputed text-[10px]"
+            >{{ active_team_registrations_needing_attention }} integrity issue{{ active_team_registrations_needing_attention|pluralize }}</span
+        >
+        {% endif %}
+    </div>
+
+    {% if archive_lock_reason %}
+    <div class="alert-info mb-5 text-sm">
+        <span>{{ archive_lock_reason }} Entrants, groups, fixtures, and result operations are locked while history remains visible.</span>
+    </div>
+    {% endif %}
+
+    {# Tab navigation #}
+    <div class="tab-nav mb-6">
+        <button
+            class="tab-item-active"
+            data-tab="entrants"
+            onclick="switchTab('entrants')"
+        >
+            Entrants
+            <span class="text-xs ml-1 opacity-60"
+                >({{ active_registration_count }})</span
+            >
+        </button>
+        <button
+            class="tab-item"
+            data-tab="groups"
+            onclick="switchTab('groups')"
+        >
+            Groups
+            <span class="text-xs ml-1 opacity-60"
+                >({{ assigned_team_registration_count }}/{{ active_team_registration_count }})</span
+            >
+        </button>
+        <button
+            class="tab-item"
+            data-tab="fixtures"
+            onclick="switchTab('fixtures')"
+        >
+            Fixtures
+            <span class="text-xs ml-1 opacity-60">({{ fixtures_count }})</span>
+        </button>
+    </div>
+
+    {# ── ENTRANTS TAB ─────────────────────────────────────────────── #}
+    <div id="panel-entrants" class="tab-panel space-y-4">
+        {# Add team form #} {% if tournament.is_team_tournament %}
+        <div class="card-padded">
+            <h2 class="font-semibold text-forest text-sm mb-3">Add Entrant</h2>
+            {% if add_team_locked_reason %}
+            <div class="alert-warning text-xs">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="w-4 h-4 shrink-0"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                    />
+                </svg>
+                <span>{{ add_team_locked_reason }}</span>
+            </div>
+            {% elif add_team_form %}
+            <form
+                method="post"
+                action="{% url 'tournament:staff_tournament_registration_add' tournament.pk %}"
+                class="flex flex-col sm:flex-row items-stretch sm:items-end gap-3"
+            >
+                {% csrf_token %}
+                <div class="form-group flex-1">
+                    <label class="form-label" for="{{ add_team_form.team.id_for_label }}">Team</label>
+                    {{ add_team_form.team }}
+                </div>
+                <button type="submit" class="btn-brand btn-sm shrink-0 mb-0.5">
+                    Add team
+                </button>
+            </form>
+            {% endif %}
+        </div>
+        {% endif %} {# Registrations list #} {% if registrations %}
+        <p class="stats-table-hint">Swipe to view all entrant columns</p>
+        <div class="card overflow-hidden table-shell stats-table-shell">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Entrant</th>
+                        <th class="text-center w-16">Seed</th>
+                        <th class="text-center w-16">Active</th>
+                        <th class="text-center w-20">Integrity</th>
+                        <th class="w-20"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reg in registrations %}
+                    <tr class="{% if not reg.is_active %}opacity-50{% endif %}">
+                        <td>
+                            <div class="flex items-start gap-2">
+                                <div>
+                                    <p
+                                        class="font-semibold text-forest text-sm"
+                                    >
+                                        {% if reg.team %}{{ reg.team.name }}{% elif reg.player %}{{ reg.player.display_name }}{% endif %}
+                                    </p>
+                                    <p class="text-xs text-gray-400 mt-0.5">
+                                        {% if reg.team %}{{ reg.active_roster_count }} player{{ reg.active_roster_count|pluralize }}{% if reg.group_label %}&nbsp;·&nbsp;Grp {{ reg.group_label }}{% endif %}{% if reg.seed %}&nbsp;·&nbsp;Seed {{ reg.seed }}{% endif %}{% endif %}
+                                    </p>
+                                    {% if reg.team and not reg.team.team_integrity_summary.team_integrity_ok %}
+                                    <p class="text-[10px] text-red-600 mt-0.5">
+                                        ⚠ {{ reg.team.team_integrity_summary.team_integrity_message }}
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if archive_lock_reason %}
+                            <span class="text-xs text-gray-400">
+                                {{ reg.seed|default:"-" }}
+                            </span>
+                            {% else %}
+                            <form
+                                method="post"
+                                action="{% url 'tournament:staff_tournament_registration_update' tournament.pk reg.pk %}"
+                                class="flex gap-1 justify-center"
+                            >
+                                {% csrf_token %}
+                                <input
+                                    aria-label="Seed for {% if reg.team %}{{ reg.team.name }}{% elif reg.player %}{{ reg.player.display_name }}{% else %}entrant{% endif %}"
+                                    type="number"
+                                    name="seed"
+                                    value="{{ reg.staff_form.seed.value|default:'' }}"
+                                    min="1"
+                                    placeholder="—"
+                                    class="w-14 text-center text-xs border border-gray-200 rounded-lg px-1.5 py-1 focus:outline-none focus:border-brand"
+                                />
+                                <input
+                                    type="hidden"
+                                    name="is_active"
+                                    value="{{ reg.is_active|yesno:'on,' }}"
+                                />
+                                <button
+                                    type="submit"
+                                    class="text-xs text-brand hover:text-brand-dark font-medium transition-colors"
+                                >
+                                    ✓
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if archive_lock_reason %}
+                            <span class="text-xs font-medium {% if reg.is_active %}text-green-600{% else %}text-gray-400{% endif %}">
+                                {% if reg.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                            {% else %}
+                            <form
+                                method="post"
+                                action="{% url 'tournament:staff_tournament_registration_update' tournament.pk reg.pk %}"
+                            >
+                                {% csrf_token %}
+                                <input
+                                    type="hidden"
+                                    name="seed"
+                                    value="{{ reg.staff_form.seed.value|default:'' }}"
+                                />
+                                <button
+                                    type="submit"
+                                    name="is_active"
+                                    value="{% if reg.is_active %}{% else %}on{% endif %}"
+                                    class="text-xs font-medium {% if reg.is_active %}text-green-600 hover:text-red-500{% else %}text-gray-400 hover:text-green-600{% endif %} transition-colors"
+                                >
+                                    {% if reg.is_active %}Active{% else %}Inactive{% endif %}
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if reg.team %}
+                            {% if reg.team.team_integrity_summary.team_integrity_ok %}
+                            <span class="text-green-500 text-xs">✓</span>
+                            {% else %}
+                            <span class="text-red-500 text-xs">✗</span>
+                            {% endif %}
+                            {% else %}
+                            <span class="text-gray-300 text-xs">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right">
+                            {% if reg.team %}
+                            <a
+                                href="{% url 'accounts:staff_team_detail' reg.team.pk %}"
+                                class="text-xs text-gray-400 hover:text-brand transition-colors"
+                                >Detail</a
+                            >
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p class="empty-state-title">No entrants registered yet</p>
+        </div>
+        {% endif %}
+    </div>
+
+    {# ── GROUPS TAB ───────────────────────────────────────────────── #}
+    <div id="panel-groups" class="tab-panel hidden space-y-5">
+        {% if group_assignments_locked %}
+        <div class="alert-warning">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-5 h-5 shrink-0"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+                />
+            </svg>
+            <p class="text-sm font-medium">
+                Groups locked: {{ group_assignment_lock_reason }}
+            </p>
+        </div>
+        {% endif %} {# Existing groups #} {% if existing_groups %}
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for group in existing_groups %}
+            <div class="card overflow-hidden">
+                <div class="px-4 py-3 bg-sage/50 border-b border-gray-100">
+                    <p class="font-semibold text-forest text-sm">
+                        Group {{ group.label }}
+                    </p>
+                    <p class="text-xs text-gray-400">
+                        {{ group.registrations|length }} team{{ group.registrations|length|pluralize }}
+                    </p>
+                </div>
+                <ul class="divide-y divide-gray-50">
+                    {% for reg in group.registrations %}
+                    <li
+                        class="px-4 py-2.5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <span class="text-sm font-medium text-forest truncate"
+                            >{{ reg.team.name }}</span
+                        >
+                        {% if not group_assignments_locked and reg.group_form %}
+                        <form
+                            method="post"
+                            action="{% url 'tournament:staff_tournament_group_assignment_update' tournament.pk reg.pk %}"
+                            class="flex items-center gap-1 shrink-0"
+                        >
+                            {% csrf_token %}
+                            <input
+                                type="hidden"
+                                name="next"
+                                value="{% url 'tournament:staff_tournament_registrations' tournament.pk %}#groups"
+                            />
+                            <input
+                                aria-label="Group label for {{ reg.team.name }}"
+                                type="text"
+                                name="group_label"
+                                value="{{ reg.group_form.group_label.value|default:'' }}"
+                                maxlength="20"
+                                placeholder="A"
+                                class="w-10 text-center text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:border-brand uppercase"
+                            />
+                            <button
+                                type="submit"
+                                class="text-xs text-brand font-medium hover:text-brand-dark transition-colors"
+                            >
+                                ✓
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="text-xs font-mono text-brand"
+                            >{{ reg.group_label }}</span
+                        >
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {# Unassigned teams #}
+        {% if unassigned_team_registrations %}
+        <div class="card overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h3 class="font-semibold text-forest text-sm">
+                    Unassigned Teams
+                </h3>
+                <p class="text-xs text-gray-400 mt-0.5">
+                    {{ unassigned_team_registrations|length }} team{{ unassigned_team_registrations|length|pluralize }} without a
+                    group
+                </p>
+            </div>
+            {% if not group_assignments_locked %}
+            <div class="px-5 py-3 border-b border-gray-100 bg-sage/20">
+                <form
+                    id="bulk-group-assignment-form"
+                    method="post"
+                    action="{% url 'tournament:staff_tournament_group_assignment_bulk_update' tournament.pk %}"
+                    class="flex flex-col sm:flex-row sm:items-end gap-2"
+                >
+                    {% csrf_token %}
+                    <input
+                        type="hidden"
+                        name="next"
+                        value="{% url 'tournament:staff_tournament_registrations' tournament.pk %}#groups"
+                    />
+                    <div class="flex-1 sm:max-w-[10rem]">
+                        <label class="text-xs text-gray-400" for="bulk_group_label">Assign selected to group</label>
+                        <input
+                            id="bulk_group_label"
+                            type="text"
+                            name="group_label"
+                            placeholder="A"
+                            maxlength="20"
+                            class="w-full text-center text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:border-brand uppercase"
+                        />
+                    </div>
+                    <button type="submit" class="btn-brand btn-sm text-xs sm:self-end">
+                        Assign selected
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+            <ul class="divide-y divide-gray-50">
+                {% for reg in unassigned_team_registrations %}
+                <li class="px-5 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex items-center gap-3">
+                        {% if not group_assignments_locked and reg.group_form %}
+                        <input
+                            type="checkbox"
+                            name="registration_ids"
+                            value="{{ reg.pk }}"
+                            form="bulk-group-assignment-form"
+                            class="h-4 w-4 rounded border-gray-300 text-brand focus:ring-brand"
+                            aria-label="Select {{ reg.team.name }} for bulk assignment"
+                        />
+                        {% endif %}
+                        <span class="font-medium text-forest text-sm"
+                            >{{ reg.team.name }}</span
+                        >
+                    </div>
+                    {% if not group_assignments_locked and reg.group_form %}
+                    <form
+                        method="post"
+                        action="{% url 'tournament:staff_tournament_group_assignment_update' tournament.pk reg.pk %}"
+                        class="flex flex-col gap-2 sm:flex-row sm:items-center"
+                    >
+                        {% csrf_token %}
+                        <input
+                            type="hidden"
+                            name="next"
+                            value="{% url 'tournament:staff_tournament_registrations' tournament.pk %}#groups"
+                        />
+                        <label class="text-xs text-gray-400" for="group_label_{{ reg.pk }}"
+                            >Assign to group:</label
+                        >
+                        <input
+                            id="group_label_{{ reg.pk }}"
+                            type="text"
+                            name="group_label"
+                            placeholder="A"
+                            maxlength="20"
+                            class="w-12 text-center text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:border-brand uppercase"
+                        />
+                        <button
+                            type="submit"
+                            class="btn-outline btn-sm text-xs"
+                        >
+                            Assign
+                        </button>
+                    </form>
+                    {% else %}
+                    <span class="text-xs text-gray-400">Locked</span>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% elif not existing_groups %}
+        <div class="empty-state">
+            <p class="empty-state-title">No group assignments yet</p>
+            <p class="empty-state-body">
+                Add groups to active team registrations in the Entrants tab.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+    {# ── FIXTURES TAB ─────────────────────────────────────────────── #}
+    <div id="panel-fixtures" class="tab-panel hidden space-y-4">
+        <div class="card-padded">
+            <h2 class="font-semibold text-forest text-sm mb-1">
+                Fixture Generation
+            </h2>
+            <p class="text-xs text-gray-400 mb-4">
+                {% if has_results %}Fixtures exist and results have been
+                submitted. Generation may add the next stage. {% elif has_fixtures %}{{ fixtures_count }} fixture{{ fixtures_count|pluralize }} generated. Run again to continue
+                hybrid progression. {% else %}No fixtures yet. Generate the
+                first round.{% endif %}
+            </p>
+
+            {% if entrant_lock_reason and not has_fixtures %}
+            <div class="alert-warning text-xs mb-3">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="w-4 h-4 shrink-0"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                    />
+                </svg>
+                <span>{{ entrant_lock_reason }}</span>
+            </div>
+            {% endif %} {% if archive_lock_reason %}
+            <div class="alert-info text-xs">
+                <span>{{ archive_lock_reason }}</span>
+            </div>
+            {% elif tournament.tournament_type == 'single' %}
+            <div class="alert-info text-xs">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="w-4 h-4 shrink-0"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+                    />
+                </svg>
+                <span
+                    >Single-player fixture generation is not yet
+                    supported.</span
+                >
+            </div>
+            {% else %}
+            <form
+                method="post"
+                action="{% url 'tournament:staff_generate_fixtures' tournament.pk %}"
+            >
+                {% csrf_token %}
+                <input
+                    type="hidden"
+                    name="next"
+                    value="{% url 'tournament:staff_tournament_registrations' tournament.pk %}#fixtures"
+                />
+                <button type="submit" class="btn-brand">
+                    {% if has_fixtures %}Generate next stage{% else %}Generate
+                    fixtures{% endif %}
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+        {% if has_fixtures %}
+        <div class="card-padded">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <p class="font-semibold text-forest text-sm">
+                        {{ fixtures_count }} fixture{{ fixtures_count|pluralize }} generated
+                    </p>
+                    <p class="text-xs text-gray-400 mt-0.5">
+                        View and schedule fixtures on the public tournament
+                        page.
+                    </p>
+                </div>
+                <a
+                    href="{% url 'tournament:tournament_detail' tournament.pk %}#fixtures"
+                    class="btn-outline btn-sm shrink-0"
+                    >View fixtures →</a
+                >
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    function switchTab(name) {
+        document.querySelectorAll(".tab-panel").forEach(function (p) {
+            p.classList.add("hidden");
+        });
+        document.getElementById("panel-" + name).classList.remove("hidden");
+        document.querySelectorAll("[data-tab]").forEach(function (btn) {
+            btn.className =
+                btn.dataset.tab === name ? "tab-item-active" : "tab-item";
+        });
+        history.replaceState(null, "", "#" + name);
+    }
+    (function () {
+        var hash = window.location.hash.slice(1);
+        switchTab(
+            ["entrants", "groups", "fixtures"].includes(hash)
+                ? hash
+                : "entrants",
+        );
+    })();
+</script>
+{% endblock %}

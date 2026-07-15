@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Announcements — Staff{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:staff_dashboard' %}">Staff</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">Announcements</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    <div class="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="page-title">Announcements</h1>
+            <p class="page-subtitle">Manage announcements for the community.</p>
+        </div>
+        <a
+            href="{% url 'tournament:staff_announcement_create' %}"
+            class="btn-brand shrink-0"
+            >+ New announcement</a
+        >
+    </div>
+
+    {% if announcements %}
+    <p class="stats-table-hint">Swipe to view all announcement columns</p>
+    <div class="card overflow-hidden table-shell stats-table-shell">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th class="text-center w-20">Status</th>
+                    <th class="text-center w-20">Pinned</th>
+                    <th class="w-40">Tournament</th>
+                    <th class="text-right w-24"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for announcement in announcements %}
+                <tr>
+                    <td>
+                        <div>
+                            <p class="font-semibold text-forest text-sm">
+                                {{ announcement.title }}
+                            </p>
+                            <p class="text-xs text-gray-400 mt-0.5 line-clamp-1">
+                                {{ announcement.body|truncatewords:15 }}
+                            </p>
+                            <time class="text-xs text-gray-300 font-mono mt-1 block">
+                                {% if announcement.updated_at != announcement.created_at %}
+                                    Updated {{ announcement.updated_at|date:"M j" }}
+                                {% else %}
+                                    Created {{ announcement.created_at|date:"M j" }}
+                                {% endif %}
+                            </time>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <span
+                            class="{% if announcement.is_active %}badge-active{% else %}badge-inactive{% endif %} text-[10px]"
+                        >
+                            {% if announcement.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        {% if announcement.is_pinned %}
+                        <span class="badge-staff text-[10px]">Pinned</span>
+                        {% else %}
+                        <span class="text-xs text-gray-400">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if announcement.tournament %}
+                        <a
+                            href="{% url 'tournament:tournament_detail' announcement.tournament.pk %}"
+                            class="text-xs text-brand font-medium hover:text-brand-dark transition-colors"
+                        >
+                            {{ announcement.tournament.name }}
+                        </a>
+                        {% else %}
+                        <span class="text-xs text-gray-400">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-right">
+                        <a
+                            href="{% url 'tournament:staff_announcement_edit' announcement.pk %}"
+                            class="btn-outline btn-sm text-xs"
+                        >
+                            Edit
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="empty-state py-12">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="mx-auto h-12 w-12 text-gray-300"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+            </svg>
+            <p class="empty-state-title mt-3">No announcements yet</p>
+            <p class="empty-state-body">
+                Create your first announcement to get started.
+            </p>
+            <a
+                href="{% url 'tournament:staff_announcement_create' %}"
+                class="btn-brand mt-4"
+            >
+                + Create announcement
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

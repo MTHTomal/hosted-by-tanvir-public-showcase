@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block title %}{{ team.name }} — Staff{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:staff_dashboard' %}">Staff</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="{% url 'accounts:staff_team_list' %}">Teams</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">{{ team.name }}</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section max-w-4xl">
+    {# ─── HEADER ──────────────────────────────────────────────────── #}
+    <div class="card-padded mb-6">
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+                <div class="flex items-center gap-2 flex-wrap mb-1">
+                    <h1 class="font-display font-bold text-forest text-xl">
+                        {{ team.name }}
+                    </h1>
+                    {% if team.is_approved %}
+                    <span class="badge-open text-[10px]">Approved</span>
+                    {% else %}
+                    <span class="badge-pending text-[10px]">Pending</span>
+                    {% endif %} {% if not team_integrity_ok %}
+                    <span class="badge-disputed text-[10px]"
+                        >{{ team_integrity_label }}</span
+                    >
+                    {% endif %}
+                </div>
+                <p class="text-xs text-gray-400">
+                    {{ active_membership_count }} active &middot; {{
+                    inactive_membership_count }} historical {% if team.captain
+                    %} &middot; Captain field: {{ team.captain.display_name }}{%
+                    endif %}
+                </p>
+
+                {# Integrity diagnostics #} {% if not captain_alignment_ok %}
+                <p class="text-xs text-amber-700 mt-2">
+                    ⚠ Captain: {{ captain_alignment_message }}
+                </p>
+                {% endif %} {% if not roster_eligibility_ok %}
+                <p class="text-xs text-red-600 mt-1">
+                    ✗ Roster: {{ roster_eligibility_message }}
+                </p>
+                {% endif %}
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                {% if team.is_approved %}
+                <form
+                    method="post"
+                    action="{% url 'accounts:staff_team_unapprove' team.pk %}"
+                >
+                    {% csrf_token %}
+                    <input
+                        type="hidden"
+                        name="next"
+                        value="{{ request.path }}"
+                    />
+                    <button
+                        type="submit"
+                        class="btn-outline btn-sm text-xs text-amber-600 border-amber-300 hover:bg-amber-50"
+                    >
+                        Unapprove
+                    </button>
+                </form>
+                {% else %}
+                <form
+                    method="post"
+                    action="{% url 'accounts:staff_team_approve' team.pk %}"
+                >
+                    {% csrf_token %}
+                    <input
+                        type="hidden"
+                        name="next"
+                        value="{{ request.path }}"
+                    />
+                    <button type="submit" class="btn-brand btn-sm">
+                        Approve team
+                    </button>
+                </form>
+                {% endif %}
+                <a
+                    href="{% url 'accounts:team_detail' team.pk %}"
+                    class="btn-ghost btn-sm text-xs"
+                    >Public page ↗</a
+                >
+            </div>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-5">
+        {# Active roster #}
+        <div class="card overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h2 class="font-semibold text-forest text-sm">Active Roster</h2>
+                <p class="text-xs text-gray-400 mt-0.5">
+                    {{ active_membership_count }} member{{
+                    active_membership_count|pluralize }}
+                </p>
+            </div>
+            {% if active_memberships %}
+            <ul class="divide-y divide-gray-50">
+                {% for m in active_memberships %}
+                <li class="flex items-center justify-between px-5 py-3">
+                    <div>
+                        <a
+                            href="{% url 'accounts:profile' m.player.username %}"
+                            class="text-sm font-medium text-forest hover:text-brand transition-colors"
+                        >
+                            {{ m.player.display_name }}
+                        </a>
+                        <p class="text-xs text-gray-400">
+                            @{{ m.player.username }}
+                        </p>
+                    </div>
+                    <span
+                        class="{% if m.role == 'captain' %}badge-staff{% else %}badge-completed{% endif %} text-[10px]"
+                        >{{ m.get_role_display }}</span
+                    >
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="px-5 py-6 text-center text-xs text-gray-400">
+                No active members.
+            </div>
+            {% endif %}
+        </div>
+
+        {# Tournament registrations + standings #}
+        <div class="space-y-4">
+            {% if registrations %}
+            <div class="card overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-100">
+                    <h2 class="font-semibold text-forest text-sm">
+                        Tournament Entries
+                    </h2>
+                </div>
+                <ul class="divide-y divide-gray-50">
+                    {% for reg in registrations %}
+                    <li
+                        class="flex items-center justify-between gap-3 px-5 py-3"
+                    >
+                        <a
+                            href="{% url 'tournament:staff_tournament_registrations' reg.tournament.pk %}"
+                            class="text-sm font-medium text-forest hover:text-brand transition-colors truncate"
+                        >
+                            {{ reg.tournament.name }}
+                        </a>
+                        <div class="flex items-center gap-2 shrink-0">
+                            {% if reg.group_label %}<span
+                                class="text-xs font-mono text-brand"
+                                >Grp {{ reg.group_label }}</span
+                            >{% endif %} {% if not reg.is_active %}<span
+                                class="badge-draft text-[10px]"
+                                >Inactive</span
+                            >{% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %} {% if inactive_memberships %}
+            <div class="card overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-100">
+                    <h2 class="font-semibold text-forest text-sm">
+                        Membership History
+                    </h2>
+                    <p class="text-xs text-gray-400 mt-0.5">
+                        {{ inactive_membership_count }} former member{{
+                        inactive_membership_count|pluralize }}
+                    </p>
+                </div>
+                <ul class="divide-y divide-gray-50">
+                    {% for m in inactive_memberships %}
+                    <li class="flex items-center justify-between px-5 py-2.5">
+                        <div>
+                            <p class="text-sm text-gray-500">
+                                {{ m.player.display_name }}
+                            </p>
+                            {% if m.left_at %}
+                            <p class="text-xs text-gray-400">
+                                Left {{ m.left_at|date:"M j, Y" }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        <span class="badge-draft text-[10px]"
+                            >{{ m.get_role_display }}</span
+                        >
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

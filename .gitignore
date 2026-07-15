@@ -1,0 +1,89 @@
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Python build and packaging artifacts
+build/
+dist/
+*.egg-info/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+!hosted_by_tanvir/.env.example
+
+# Python virtual environments
+.venv/
+.venv_*/
+venv/
+env/
+
+# Node dependencies
+node_modules/
+
+# Django-generated static and media files
+staticfiles/
+media/
+test_media/
+
+# Local databases and database journals
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-shm
+*.sqlite3-wal
+phase2-check.sqlite3
+smoke.sqlite3
+smoke.sqlite3-journal
+
+# Logs and test outputs
+*.log
+test_output.txt
+test_result.log
+result_stat_test_output.txt
+
+# Load-testing outputs
+load_test_results/
+jmeter_results/
+*.jtl
+load_test_fallback.json
+
+# Local prediction, export, and security evidence artifacts
+hosted-by-tanvir-prediction-dataset*.zip
+prediction-dataset*.zip
+prediction_dataset*.zip
+*_baseline_output/
+prediction_baseline_output/
+*_benchmark_output/
+prediction_benchmark_output/
+temp_exports/
+local_exports/
+private_exports/
+raw_screenshots/
+private_screenshots/
+
+# OCR and local-processing generated artifacts
+weekly_processing_output*/
+ocr_benchmark_output*/
+ocr_processing_output*/
+ocr_benchmark_fallback.json
+
+# Notebook-generated cache
+.ipynb_checkpoints/
+
+# Test, lint, type-checking, and coverage caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Internal documentation excluded from the public showcase
+/docs/
+/DEMO_DATA_USAGE.md

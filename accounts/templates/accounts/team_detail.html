@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% block title %}{{ team.name }}{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:home' %}">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="{% url 'accounts:team_list' %}">Teams</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">{{ team.name }}</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section max-w-4xl">
+    <div
+        class="card-padded flex flex-col sm:flex-row items-start sm:items-center gap-5 mb-6"
+    >
+        <div class="shrink-0">
+            {% if team.logo %}
+            <img
+                src="{{ team.logo.url }}"
+                alt="{{ team.name }} logo"
+                class="w-20 h-20 rounded-xl object-cover border border-green-100"
+            />
+            {% else %}
+            <div
+                class="w-20 h-20 rounded-xl bg-forest flex items-center justify-center text-white font-display font-bold text-3xl"
+            >
+                {{ team.name|first|upper }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h1
+                            class="font-display font-bold text-forest text-2xl sm:text-3xl leading-tight"
+                        >
+                            {{ team.name }}
+                        </h1>
+                        {% if team.is_approved %}
+                        <span class="badge-open text-[10px]">Approved</span>
+                        {% else %}
+                        <span class="badge-pending text-[10px]"
+                            >Pending approval</span
+                        >
+                        {% endif %}
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1">
+                        {{ team.player_count }} member{{ team.player_count|pluralize }} {% if team.captain %}
+                        &middot; Captain:
+                        <a
+                            href="{% url 'accounts:profile' team.captain.username %}"
+                            class="text-brand hover:text-brand-dark transition-colors"
+                        >
+                            {{ team.captain.display_name }}
+                        </a>
+                        {% endif %}
+                    </p>
+                </div>
+                {% if can_edit_team_identity %}
+                <a
+                    href="{% url 'accounts:team_edit' team.pk %}"
+                    class="btn-outline btn-sm shrink-0"
+                    >Edit team</a
+                >
+                {% endif %}
+                {% if can_manage_team_recruiting %}
+                <a
+                    href="{% url 'marketplace_team_recruiting' %}"
+                    class="btn-outline btn-sm shrink-0"
+                    >Recruiting</a
+                >
+                {% endif %}
+            </div>
+            {% if team.description %}
+            <p class="text-sm text-gray-500 mt-3 leading-relaxed">
+                {{ team.description }}
+            </p>
+            {% else %}
+            <p class="text-sm text-gray-400 mt-3 leading-relaxed">
+                Registered squad competing across tournaments on Hosted by Tanvir.
+            </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <section class="mb-6">
+        <div class="flex items-end justify-between gap-3 mb-3">
+            <div>
+                <h2 class="font-semibold text-forest text-sm">
+                    Historical Stats
+                </h2>
+                <p class="text-xs text-gray-400 mt-0.5">
+                    Derived from public non-draft tournament history.
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="stat-tile">
+                <p class="font-display font-bold text-forest text-2xl">
+                    {{ historical_stats.tournaments_entered }}
+                </p>
+                <p class="section-label mt-1 text-[10px]">Entered</p>
+            </div>
+            <div class="stat-tile">
+                <p class="font-display font-bold text-forest text-xl tabular-nums">
+                    {{ historical_stats.total_wins }}-{{ historical_stats.total_draws }}-{{ historical_stats.total_losses }}
+                </p>
+                <p class="section-label mt-1 text-[10px]">W-D-L</p>
+            </div>
+            <div class="stat-tile">
+                <p class="font-display font-bold text-forest text-2xl">
+                    {{ historical_stats.total_goals_for }}
+                </p>
+                <p class="section-label mt-1 text-[10px]">Goals For</p>
+            </div>
+            <div class="stat-tile">
+                <p class="font-display font-bold text-forest text-2xl">
+                    {{ historical_stats.total_goals_against }}
+                </p>
+                <p class="section-label mt-1 text-[10px]">Goals Against</p>
+            </div>
+            <div class="stat-tile">
+                <p class="font-display font-bold text-forest text-2xl">
+                    {{ historical_stats.total_goal_difference }}
+                </p>
+                <p class="section-label mt-1 text-[10px]">Goal Difference</p>
+            </div>
+            <div class="stat-tile">
+                <p class="font-display font-bold text-forest text-2xl">
+                    {{ historical_stats.win_rate }}%
+                </p>
+                <p class="section-label mt-1 text-[10px]">Win Rate</p>
+            </div>
+            <div class="stat-tile">
+                <p class="font-display font-bold text-forest text-2xl">
+                    {{ historical_stats.total_played }}
+                </p>
+                <p class="section-label mt-1 text-[10px]">Played</p>
+            </div>
+            <div class="stat-tile">
+                <p class="font-display font-bold text-forest text-2xl">
+                    {{ historical_stats.total_points }}
+                </p>
+                <p class="section-label mt-1 text-[10px]">Points</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="grid md:grid-cols-2 gap-5">
+        <div class="card overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 bg-sage/40">
+                <h2 class="font-semibold text-forest text-sm">Squad</h2>
+                <p class="text-xs text-gray-400 mt-0.5">
+                    {{ memberships|length }} active member{{ memberships|length|pluralize }}
+                </p>
+            </div>
+            {% if memberships %}
+            <ul class="divide-y divide-gray-50">
+                {% for membership in memberships %}
+                <li class="flex items-center justify-between px-5 py-3 gap-3">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-8 h-8 rounded-full bg-brand-faint flex items-center justify-center text-xs font-bold text-brand shrink-0"
+                        >
+                            {{ membership.player.display_name|first|upper }}
+                        </div>
+                        <div>
+                            <a
+                                href="{% url 'accounts:profile' membership.player.username %}"
+                                class="text-sm font-medium text-forest hover:text-brand transition-colors"
+                            >
+                                {{ membership.player.display_name }}
+                            </a>
+                            <p class="text-xs text-gray-400">
+                                @{{ membership.player.username }}
+                            </p>
+                        </div>
+                    </div>
+                    <span
+                        class="{% if membership.role == 'captain' %}badge-staff{% else %}badge-completed{% endif %} text-[10px] shrink-0"
+                    >
+                        {{ membership.get_role_display }}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="px-5 py-8 text-center">
+                <p class="empty-state-body text-xs">No active members.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 bg-sage/40">
+                <h2 class="font-semibold text-forest text-sm">
+                    Tournament History
+                </h2>
+                <p class="text-xs text-gray-400 mt-0.5">
+                    Performance snapshot across completed and active campaigns.
+                </p>
+            </div>
+            {% if tournament_history %}
+            <ul class="divide-y divide-gray-50">
+                {% for history in tournament_history %}
+                <li class="flex items-center justify-between px-5 py-3 gap-3">
+                    <div class="min-w-0">
+                        <a
+                            href="{% url 'tournament:tournament_detail' history.tournament.pk %}"
+                            class="text-sm font-medium text-forest hover:text-brand transition-colors truncate block"
+                        >
+                            {{ history.tournament.name }}
+                        </a>
+                        <p class="text-xs text-gray-400 mt-0.5 tabular-nums">
+                            {{ history.played }}P &middot; {{ history.wins }}W
+                            &middot; {{ history.draws }}D &middot; {{ history.losses }}L
+                            &middot; {{ history.goals_for }}GF &middot; {{ history.goals_against }}GA
+                            &middot; {{ history.goal_difference|default:0 }}GD
+                        </p>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <p class="font-bold text-forest tabular-nums">
+                            {{ history.points }}
+                        </p>
+                        <p class="text-[10px] text-gray-400">pts</p>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="px-5 py-8 text-center">
+                <p class="empty-state-body text-xs">
+                    No tournament history yet.
+                </p>
+                <a
+                    href="{% url 'tournament:tournament_list' %}"
+                    class="text-xs text-brand hover:text-brand-dark font-medium mt-2 inline-block transition-colors"
+                    >Browse tournaments →</a
+                >
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

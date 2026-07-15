@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Teams — Staff{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:staff_dashboard' %}">Staff</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">Teams</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    <div class="mb-6">
+        <h1 class="page-title">Teams</h1>
+        <p class="page-subtitle">All teams including pending approval.</p>
+    </div>
+
+    {% if teams %}
+    {% with pending_teams=teams|dictsort:"is_approved" %}
+    {% if pending_teams and not pending_teams.0.is_approved %}
+    <div class="mb-6">
+        <p class="section-label mb-3">Pending Approval</p>
+        <div class="flex flex-col gap-2">
+            {% for team in pending_teams %}
+            {% if not team.is_approved %}
+            <div class="card p-4 border-l-4 border-l-amber-400">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="min-w-0">
+                        <p class="font-semibold text-forest text-sm">
+                            {{ team.name }}
+                        </p>
+                        <p class="text-xs text-gray-400">
+                            {{ team.active_memberships_count }} member{{
+                            team.active_memberships_count|pluralize }}
+                            {% if team.captain %}&nbsp;·&nbsp;Captain: {{ team.captain.display_name }}{% endif %}
+                        </p>
+                    </div>
+                    <div class="flex flex-col gap-2 shrink-0 sm:flex-row sm:items-center">
+                        <a
+                            href="{% url 'accounts:staff_team_detail' team.pk %}"
+                            class="btn-ghost btn-sm text-xs"
+                            >View</a
+                        >
+                        <form
+                            method="post"
+                            action="{% url 'accounts:staff_team_approve' team.pk %}"
+                        >
+                            {% csrf_token %}
+                            <input
+                                type="hidden"
+                                name="next"
+                                value="{{ request.path }}"
+                            />
+                            <button
+                                type="submit"
+                                class="btn-brand btn-sm text-xs"
+                            >
+                                Approve
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {# All teams #}
+    <p class="stats-table-hint">Swipe to view all team columns</p>
+    <div class="card overflow-hidden table-shell stats-table-shell">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Team</th>
+                    <th class="text-center w-20">Status</th>
+                    <th class="text-center w-20">Members</th>
+                    <th class="text-center w-24">Integrity</th>
+                    <th class="w-20"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for team in teams %}
+                <tr>
+                    <td>
+                        <p class="font-semibold text-forest text-sm">
+                            {{ team.name }}
+                        </p>
+                        {% if team.captain %}
+                        <p class="text-xs text-gray-400">
+                            Captain: {{ team.captain.display_name }}
+                        </p>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if team.is_approved %}
+                        <span class="badge-open text-[10px]">Approved</span>
+                        {% else %}
+                        <span class="badge-pending text-[10px]">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center tabular-nums text-sm text-gray-600">
+                        {{ team.active_memberships_count }}
+                    </td>
+                    <td class="text-center">
+                        {% if team.team_integrity_summary.team_integrity_ok %}
+                        <span class="text-green-500 text-xs font-medium"
+                            >OK</span
+                        >
+                        {% else %}
+                        <span
+                            class="text-red-500 text-xs font-medium"
+                            title="{{ team.team_integrity_summary.team_integrity_message }}"
+                            >Issues</span
+                        >
+                        {% endif %}
+                    </td>
+                    <td class="text-right">
+                        <a
+                            href="{% url 'accounts:staff_team_detail' team.pk %}"
+                            class="text-xs text-brand hover:text-brand-dark font-medium transition-colors"
+                            >Detail →</a
+                        >
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% endwith %}
+    {% else %}
+    <div class="empty-state">
+        <p class="empty-state-title">No teams yet</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

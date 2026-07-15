@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+{% block title %}Tournaments{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:home' %}">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">Tournaments</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    <section class="bg-forest text-white rounded-[2rem] overflow-hidden border border-forest-light/40 shadow-card mb-8">
+        <div class="relative">
+            <div class="absolute inset-0 opacity-20">
+                <div class="absolute inset-x-10 top-8 bottom-8 border border-white/10 rounded-[1.75rem]"></div>
+                <div class="absolute left-1/2 top-0 bottom-0 w-px bg-white/10"></div>
+                <div class="absolute inset-y-8 left-1/2 -translate-x-1/2 w-32 rounded-full border border-white/10"></div>
+            </div>
+            <div class="relative px-5 py-10 sm:px-8 lg:px-10">
+                <p class="section-label text-brand/70 mb-4 tracking-[0.2em]">
+                    Tournament Directory
+                </p>
+                <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                    <div class="max-w-2xl">
+                        <h1 class="font-display text-4xl sm:text-5xl leading-tight text-white">
+                            Browse every
+                            <span class="text-brand">competition</span>.
+                        </h1>
+                        <p class="mt-4 max-w-xl text-sm sm:text-base text-white/70">
+                            Open registrations, active brackets, and completed campaigns all live here in one place.
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:w-[26rem]">
+                        <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+                            <p class="text-2xl font-display text-white">{{ tournaments|length }}</p>
+                            <p class="mt-1 text-[11px] uppercase tracking-[0.25em] text-white/45">
+                                Total
+                            </p>
+                        </div>
+                        <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+                            <p id="hero-open-count" class="text-2xl font-display text-brand">0</p>
+                            <p class="mt-1 text-[11px] uppercase tracking-[0.25em] text-white/45">
+                                Open
+                            </p>
+                        </div>
+                        <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 col-span-2 sm:col-span-1">
+                            <p id="hero-progress-count" class="text-2xl font-display text-amber-300">0</p>
+                            <p class="mt-1 text-[11px] uppercase tracking-[0.25em] text-white/45">
+                                Live
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="card p-3 sm:p-4 mb-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <p class="section-label mb-1">Status Filter</p>
+                <h2 class="font-display text-2xl text-forest">Tournament board</h2>
+            </div>
+            <div class="text-sm text-gray-500">
+                Showing
+                <span id="showing-count" class="font-semibold text-forest"
+                    >{{ tournaments|length }}</span
+                >
+                tournament{{ tournaments|length|pluralize }}
+            </div>
+        </div>
+
+        <div class="mt-4 overflow-x-auto">
+            <div class="tab-nav min-w-max" role="tablist">
+                <button
+                    class="tab-item-active"
+                    data-filter="all"
+                    onclick="filterTournaments('all')"
+                    role="tab"
+                >
+                    All
+                    <span id="count-all" class="text-xs ml-1 opacity-60"
+                        >({{ tournaments|length }})</span
+                    >
+                </button>
+                <button
+                    class="tab-item"
+                    data-filter="open"
+                    onclick="filterTournaments('open')"
+                    role="tab"
+                >
+                    Open <span id="count-open" class="text-xs ml-1 opacity-60"></span>
+                </button>
+                <button
+                    class="tab-item"
+                    data-filter="progress"
+                    onclick="filterTournaments('progress')"
+                    role="tab"
+                >
+                    In progress
+                    <span id="count-progress" class="text-xs ml-1 opacity-60"></span>
+                </button>
+                <button
+                    class="tab-item"
+                    data-filter="completed"
+                    onclick="filterTournaments('completed')"
+                    role="tab"
+                >
+                    Completed
+                    <span id="count-completed" class="text-xs ml-1 opacity-60"></span>
+                </button>
+                <button
+                    class="tab-item"
+                    data-filter="archived"
+                    onclick="filterTournaments('archived')"
+                    role="tab"
+                >
+                    Archive
+                    <span id="count-archived" class="text-xs ml-1 opacity-60"></span>
+                </button>
+                {% if user.is_staff %}
+                <button
+                    class="tab-item"
+                    data-filter="draft"
+                    onclick="filterTournaments('draft')"
+                    role="tab"
+                >
+                    Draft <span id="count-draft" class="text-xs ml-1 opacity-60"></span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if tournaments %}
+    <div class="flex flex-col gap-4">
+        {% for tournament in tournaments %}
+        <div
+            class="card p-4 sm:p-5 hover:shadow-card-hover transition-shadow {% if tournament.status == 'active' %}ring-1 ring-brand/40 border-brand/60{% elif tournament.status == 'archived' %}bg-slate-50/70{% endif %}"
+            data-status="{{ tournament.status }}"
+        >
+            <div class="flex flex-col gap-5 lg:flex-row lg:items-center">
+                <div class="flex items-start gap-4 flex-1 min-w-0">
+                    <div
+                        class="w-14 h-14 rounded-2xl bg-brand-faint flex items-center justify-center shrink-0"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="w-7 h-7 text-brand"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0"
+                            />
+                        </svg>
+                    </div>
+
+                    <div class="flex-1 min-w-0">
+                        <div class="flex flex-wrap items-center gap-2 mb-2">
+                            <h3 class="font-semibold text-forest text-lg leading-tight">
+                                {{ tournament.name }}
+                            </h3>
+                            <span
+                                class="{% if tournament.status == 'registration' %}badge-open{% elif tournament.status == 'active' %}badge-progress{% elif tournament.status == 'draft' %}badge-draft{% elif tournament.status == 'archived' %}badge-staff{% else %}badge-completed{% endif %}"
+                            >
+                                {% if tournament.status == 'registration' %}Open{% elif tournament.status == 'active' %}In progress{% elif tournament.status == 'completed' %}Completed{% elif tournament.status == 'archived' %}Archived{% elif tournament.status == 'draft' %}Draft{% endif %}
+                            </span>
+                        </div>
+
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
+                            <span>
+                                {{ tournament.registration_count }} {{ tournament.participant_label }}
+                            </span>
+                            <span>
+                                {% if tournament.format == 'hybrid' %}Group stage + Knockout{% elif tournament.format == 'round_robin' %}Round robin{% else %}Knockout{% endif %}
+                            </span>
+                            <span>
+                                Capacity {{ tournament.max_teams }}
+                            </span>
+                        </div>
+
+                        <div class="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_9rem] xl:grid-cols-[minmax(0,1fr)_10rem_9rem] xl:items-center">
+                            <div>
+                                <div class="flex items-center justify-between text-xs text-gray-400 mb-1.5">
+                                    <span class="font-mono uppercase tracking-[0.2em]">Registration</span>
+                                    <span class="tabular-nums text-gray-500">
+                                        {{ tournament.registration_count }}/{{ tournament.max_teams }}
+                                    </span>
+                                </div>
+                                <div class="progress-bar-track">
+                                    <div
+                                        class="progress-bar-fill"
+                                        style="width:{% widthratio tournament.registration_count tournament.max_teams 100 %}%"
+                                    ></div>
+                                </div>
+                            </div>
+
+                            <div class="text-sm text-gray-500">
+                                {% if tournament.status == 'registration' and tournament.registration_deadline %}
+                                <p class="font-mono text-[11px] uppercase tracking-[0.2em] text-gray-400">
+                                    Deadline
+                                </p>
+                                <p class="text-base text-forest mt-1">
+                                    {{ tournament.registration_deadline|date:"M j, Y" }}
+                                </p>
+                                {% elif tournament.start_date %}
+                                <p class="font-mono text-[11px] uppercase tracking-[0.2em] text-gray-400">
+                                    {% if tournament.status == 'active' %}Started{% else %}Date{% endif %}
+                                </p>
+                                <p class="text-base text-forest mt-1">
+                                    {{ tournament.start_date|date:"M j, Y" }}
+                                </p>
+                                {% else %}
+                                <p class="font-mono text-[11px] uppercase tracking-[0.2em] text-gray-400">
+                                    Schedule
+                                </p>
+                                <p class="text-base text-forest mt-1">TBD</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="hidden xl:flex justify-end">
+                                <a
+                                    href="{% url 'tournament:tournament_detail' tournament.pk %}"
+                                    class="btn-outline"
+                                    >View →</a
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end xl:hidden">
+                    <a
+                        href="{% url 'tournament:tournament_detail' tournament.pk %}"
+                        class="btn-outline btn-sm sm:btn"
+                        >View →</a
+                    >
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <p class="empty-state-title">No tournaments yet</p>
+        <p class="empty-state-body">Check back soon.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    (function () {
+        var counts = { all: 0, open: 0, progress: 0, completed: 0, archived: 0, draft: 0 };
+        document.querySelectorAll("[data-status]").forEach(function (el) {
+            var s = el.dataset.status;
+            counts.all++;
+            if (s === "registration") counts.open++;
+            else if (s === "active") counts.progress++;
+            else if (s === "completed") counts.completed++;
+            else if (s === "archived") counts.archived++;
+            else if (s === "draft") counts.draft++;
+        });
+        ["open", "progress", "completed", "archived", "draft"].forEach(function (k) {
+            var el = document.getElementById("count-" + k);
+            if (el) el.textContent = counts[k] > 0 ? "(" + counts[k] + ")" : "";
+        });
+        var heroOpen = document.getElementById("hero-open-count");
+        if (heroOpen) heroOpen.textContent = counts.open;
+        var heroProgress = document.getElementById("hero-progress-count");
+        if (heroProgress) heroProgress.textContent = counts.progress;
+    })();
+
+    function filterTournaments(filter) {
+        var shown = 0;
+        document.querySelectorAll("[data-status]").forEach(function (el) {
+            var s = el.dataset.status;
+            var show =
+                filter === "all" ||
+                (filter === "open" && s === "registration") ||
+                (filter === "progress" && s === "active") ||
+                (filter === "completed" && s === "completed") ||
+                (filter === "archived" && s === "archived") ||
+                (filter === "draft" && s === "draft");
+            el.style.display = show ? "" : "none";
+            if (show) shown++;
+        });
+        document.getElementById("showing-count").textContent = shown;
+        document.querySelectorAll("[data-filter]").forEach(function (btn) {
+            btn.className =
+                btn.dataset.filter === filter ? "tab-item-active" : "tab-item";
+        });
+    }
+</script>
+{% endblock %}

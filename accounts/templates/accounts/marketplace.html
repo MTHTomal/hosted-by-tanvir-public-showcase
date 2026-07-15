@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Marketplace{% endblock %}
+{% block breadcrumbs %}
+<div class="page-container pt-4">
+    <nav class="breadcrumb">
+        <a href="{% url 'tournament:home' %}">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="text-forest font-medium">Marketplace</span>
+    </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-container page-section">
+    <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+            <p class="section-label mb-1">Player Marketplace</p>
+            <h1 class="page-title">Available players and recruiting teams</h1>
+            <p class="page-subtitle">{{ marketplace_status.message }}</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2">
+            {% if user.is_authenticated %}
+            <a href="{% url 'marketplace_my_availability' %}" class="btn-outline btn-sm">My availability</a>
+            <a href="{% url 'marketplace_invitations' %}" class="btn-outline btn-sm">My invitations</a>
+            {% if not user.is_staff %}
+            <a href="{% url 'marketplace_team_recruiting' %}" class="btn-outline btn-sm">Team recruiting</a>
+            {% endif %}
+            {% if user.is_staff %}
+            <a href="{% url 'staff_marketplace' %}" class="btn-brand btn-sm">Staff manage</a>
+            {% endif %}
+            {% else %}
+            <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn-outline btn-sm">Login for actions</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid lg:grid-cols-[1.35fr_1fr] gap-6">
+        <section>
+            <div class="mb-3 flex items-center justify-between gap-3">
+                <div>
+                    <h2 class="font-semibold text-forest text-base">Available players</h2>
+                    <p class="text-xs text-gray-400">{{ available_players|length }} free agent{{ available_players|length|pluralize }}</p>
+                </div>
+            </div>
+
+            {% if available_players %}
+            <div class="grid gap-4">
+                {% for player in available_players %}
+                <div class="card p-5">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <a href="{% url 'accounts:profile' player.username %}" class="font-semibold text-forest hover:text-brand transition-colors">
+                                    {{ player.display_name }}
+                                </a>
+                                <span class="badge-open text-[10px]">Available</span>
+                            </div>
+                            <p class="text-sm text-gray-400 mt-1">
+                                @{{ player.username }}{% if player.in_game_name %} &middot; IGN: {{ player.in_game_name }}{% endif %} &middot; Free agent
+                            </p>
+                        </div>
+                        {% if user.is_authenticated and not user.is_staff and captain_recruiting_team_count and user.pk != player.pk %}
+                        <a href="{% url 'marketplace_invite_player' player.pk %}" class="btn-brand btn-sm shrink-0">Invite</a>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="stat-tile">
+                            <p class="font-display font-bold text-forest text-xl">{{ player.marketplace_career_stats.total_goals }}</p>
+                            <p class="section-label mt-1 text-[10px]">Goals</p>
+                        </div>
+                        <div class="stat-tile">
+                            <p class="font-display font-bold text-forest text-xl">{{ player.marketplace_career_stats.total_assists|default:0 }}</p>
+                            <p class="section-label mt-1 text-[10px]">Assists</p>
+                        </div>
+                        <div class="stat-tile">
+                            <p class="font-display font-bold text-amber-600 text-xl">{{ player.marketplace_career_stats.total_yellow_cards }}</p>
+                            <p class="section-label mt-1 text-[10px]">Yellow</p>
+                        </div>
+                        <div class="stat-tile">
+                            <p class="font-display font-bold text-red-600 text-xl">{{ player.marketplace_career_stats.total_red_cards }}</p>
+                            <p class="section-label mt-1 text-[10px]">Red</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p class="empty-state-title">No available players</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <section>
+            <div class="mb-3">
+                <h2 class="font-semibold text-forest text-base">Recruiting teams</h2>
+                <p class="text-xs text-gray-400">{{ recruiting_teams|length }} team{{ recruiting_teams|pluralize }} with open spots</p>
+            </div>
+            {% if recruiting_teams %}
+            <div class="grid gap-4">
+                {% for team in recruiting_teams %}
+                <div class="card p-5">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <a href="{% url 'accounts:team_detail' team.pk %}" class="font-semibold text-forest hover:text-brand transition-colors">
+                                    {{ team.name }}
+                                </a>
+                                <span class="badge-open text-[10px]">Recruiting</span>
+                            </div>
+                            <p class="text-sm text-gray-400 mt-1">
+                                {% if team.captain %}Captain: {{ team.captain.display_name }}{% else %}Captain pending{% endif %}
+                            </p>
+                        </div>
+                        <div class="shrink-0 sm:text-right">
+                            <p class="font-display font-bold text-forest text-xl">{{ team.active_memberships_count }}</p>
+                            <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400">Roster</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 grid grid-cols-3 gap-3">
+                        <div class="stat-tile">
+                            <p class="font-display font-bold text-forest text-xl">{{ team.marketplace_open_spots }}</p>
+                            <p class="section-label mt-1 text-[10px]">Open</p>
+                        </div>
+                        <div class="stat-tile">
+                            <p class="font-display font-bold text-forest text-xl">{{ team.marketplace_historical_stats.total_wins }}</p>
+                            <p class="section-label mt-1 text-[10px]">Wins</p>
+                        </div>
+                        <div class="stat-tile">
+                            <p class="font-display font-bold text-forest text-xl">{{ team.marketplace_historical_stats.total_goals_for }}</p>
+                            <p class="section-label mt-1 text-[10px]">Goals</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p class="empty-state-title">No teams recruiting</p>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}
